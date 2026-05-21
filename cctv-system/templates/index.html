@@ -1,0 +1,130 @@
+index.html version 2
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- HARDENING CONTROL: Nilalagyan ng proteksyon laban sa MIME-sniffing attacks -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">   
+    
+    <!-- HARDENING CONTROL: Dito isasaksak ang Flask CSRF Token para makuha ng JavaScript -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <title>CCTV Monitoring System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #00adb5;
+        }
+        .video-container {
+            margin-top: 20px;
+            border: 4px solid #393e46;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+            background-color: #000;
+            width: 640px; 
+            height: 480px; /* Eksaktong sukat para maiwasan ang Cumulative Layout Shift (CLS) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Pinapanatili ang aspect ratio ng CCTV nang hindi napuputol ang gilid */
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #eeeeee;
+            text-align: center;
+        }
+        #security_log_status {
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>CCTV LIVE STREAM CONTROL</h1>
+    
+    <div class="video-container">
+        <!-- Naka-set sa 'Fail-Closed' bilang default habang bineverify pa ang token -->
+        <img id="cctv_monitor" alt="Authenticating Secure Transaction Boundary...">
+    </div>
+
+    <div class="status">
+        <p>System Status: <span style="color: #4caf50;">● Connected & Logging</span></p>
+        <p>Stream Isolation: <span id="security_log_status" style="color: #ff9800;">Requesting Token...</span></p>
+    </div>
+
+    <script>
+        async function initializeSecureCCTVStream() {
+            const monitorImg = document.getElementById('cctv_monitor');
+            const statusText = document.getElementById('security_log_status');
+
+            try {
+                // Kukunin ang injected CSRF token mula sa meta tag sa itaas
+                const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+                if (!csrfTokenElement) {
+                    throw new Error("Missing anti-CSRF infrastructure context.");
+                }
+                const csrfToken = csrfTokenElement.getAttribute('content');
+
+                // 1. Gumawa ng POST request na may kalakip na anti-CSRF validation headers
+                const response = await fetch('/request_stream_token', { 
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken // Dito bineverify ng Flask-WTF / SeaSurf kung lehitimo ang pinagmulan
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 2. I-verify kung nag-generate ng cryptographic token ang backend
+                    if (data.stream_token) {
+                        statusText.style.color = "#4caf50";
+                        statusText.innerText = "Token Verified (Encrypted Link Active)";
+
+                        // 3. I-inject ang single-use token + timestamp para basagin ang browser cache
+                        monitorImg.src = `/video_feed?token=${data.stream_token}&_nocache=${Date.now()}`;
+                    } else {
+                        throw new Error("Empty cryptographic boundaries.");
+                    }
+                } else {
+                    // Control 17: Fail-Closed state indicator kapag unauthorized ang session (401/403)
+                    statusText.style.color = "#f44336";
+                    statusText.innerText = "Access Denied: Session Handshake Failed (403/401)";
+                    monitorImg.alt = "Unauthorized Access Attempt Detected by Kernel Logger.";
+                }
+            } catch (error) {
+                // Fallback state kapag may network interruption o tampering na naganap
+                statusText.style.color = "#f44336";
+                statusText.innerText = "Security Isolation Error: Failed to acquire secure stream token.";
+                monitorImg.alt = "Connection Refused: Secure Token Required.";
+                console.error("Critical Security Boundary Failure: ", error);
+            }
+        }
+
+        // Awtomatikong pinatatakbo ang handshake pagka-load ng layout structure
+        window.addEventListener('DOMContentLoaded', initializeSecureCCTVStream);
+    </script>
+</body>
+</html>

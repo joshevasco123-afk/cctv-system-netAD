@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CCTV Monitoring System | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f9fbf9;
+            min-height: 100vh;
+        }
+
+        .app-wrapper {
+            max-width: 1440px;
+            margin: 0 auto;
+            width: 100%;
+            background: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* Top bar */
+        .top-bar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2efe2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .logo-area h2 {
+            font-weight: 600;
+            color: #1e3a2f;
+            font-size: 1.5rem;
+            letter-spacing: -0.2px;
+        }
+
+        .logo-area span {
+            font-size: 0.75rem;
+            color: #4c8b4c;
+            font-weight: 500;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .welcome-text {
+            font-size: 0.85rem;
+            color: #4a6a4a;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1.5px solid #cfdfcf;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #2c5e2c;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #eef5ee;
+            border-color: #2e7d32;
+        }
+
+        /* Nav tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 2rem;
+            background: white;
+            border-bottom: 1px solid #eef3ee;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            padding: 0.6rem 1.4rem;
+            font-weight: 500;
+            border-radius: 40px;
+            color: #5a6e5a;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn.active {
+            background: #eaf6ea;
+            color: #1e5a1e;
+            font-weight: 600;
+        }
+
+        .nav-btn i {
+            margin-right: 6px;
+        }
+
+        /* Content */
+        .content-area {
+            padding: 2rem;
+        }
+
+        /* Live feed */
+        .live-feed-main {
+            background: #0d1f0d;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            border: 1px solid #2a4a2a;
+        }
+
+        .live-feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.2rem;
+            background: #162316;
+        }
+
+        .live-feed-header h3 {
+            color: #c2f0c2;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #4caf50;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .live-feed-img {
+            width: 100%;
+            max-height: 420px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.2rem;
+            border: 1px solid #e2efe2;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e5a1e;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem;
+            color: #5a6e5a;
+            margin-top: 0.3rem;
+        }
+
+        .stat-card.danger .stat-value { color: #c62828; }
+        .stat-card.warning .stat-value { color: #e65100; }
+
+        /* Device grid */
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .device-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.2rem;
+            border: 1px solid #e2efe2;
+        }
+
+        .device-card h4 {
+            font-size: 0.9rem;
+            color: #1e3a1e;
+            margin-bottom: 0.5rem;
+        }
+
+        .device-card h4 i {
+            margin-right: 6px;
+            color: #2e7d32;
+        }
+
+        .device-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .device-status.online { color: #2e7d32; }
+        .device-status i { margin-right: 4px; }
+
+        .device-card small {
+            color: #7a8a7a;
+            font-size: 0.75rem;
+        }
+
+        .stat-block {
+            background: white;
+            border-radius: 16px;
+            padding: 1.2rem;
+            border: 1px solid #e2efe2;
+            font-size: 0.85rem;
+            color: #3a5a3a;
+        }
+
+        .stat-block hr {
+            border: none;
+            border-top: 1px solid #e2efe2;
+            margin: 0.7rem 0;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e5a1e;
+            margin: 0.3rem 0;
+        }
+
+        /* Alert section */
+        .alerts-section {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2efe2;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .alerts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            background: #fafef7;
+            border-bottom: 1px solid #e2efe2;
+        }
+
+        .alerts-header h3 {
+            font-size: 0.95rem;
+            color: #1e3a1e;
+            font-weight: 600;
+        }
+
+        .alert-badge {
+            background: #c62828;
+            color: white;
+            border-radius: 20px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .alert-badge.zero {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid #f0f7f0;
+            font-size: 0.85rem;
+        }
+
+        .alert-item:last-child { border-bottom: none; }
+
+        .alert-severity {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .alert-severity.high { background: #c62828; }
+        .alert-severity.medium { background: #e65100; }
+        .alert-severity.low { background: #2e7d32; }
+
+        .alert-type { font-weight: 600; color: #1e3a1e; }
+        .alert-desc { color: #5a6e5a; font-size: 0.8rem; }
+        .alert-time { margin-left: auto; color: #7a8a7a; font-size: 0.75rem; white-space: nowrap; }
+
+        .no-alerts {
+            padding: 1.5rem;
+            text-align: center;
+            color: #7a8a7a;
+            font-size: 0.85rem;
+        }
+
+        /* Blocked IPs pill list */
+        .blocked-ips-list {
+            margin-top: 0.4rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .ip-pill {
+            background: #ffe9e9;
+            color: #c62828;
+            border-radius: 20px;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        /* Settings */
+        .settings-placeholder {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #5a6e5a;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: #7a8a7a;
+            border-top: 1px solid #eef3ee;
+            margin-top: 1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .confirm-modal {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .confirm-modal i {
+            font-size: 2.5rem;
+            color: #2e7d32;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .confirm-modal h3 { color: #1a2e1f; margin-bottom: 0.5rem; }
+        .confirm-modal p { color: #5a6e5a; font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .modal-confirm { background: #c62828; color: white; }
+        .modal-confirm:hover { background: #b71c1c; }
+        .modal-cancel { background: #eef5ee; color: #2c5e2c; border: 1.5px solid #cfdfcf; }
+        .modal-cancel:hover { background: #dff0df; }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo-area">
+            <h2>📹 CCTV Monitor</h2>
+            <span>Secure Admin Dashboard</span>
+        </div>
+        <div class="top-bar-right">
+            <span class="welcome-text"><i class="fas fa-user-circle"></i> {{ user }}</span>
+            <button class="logout-btn" id="logoutButton">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Nav Tabs -->
+    <div class="nav-tabs">
+        <button class="nav-btn active" id="liveViewTab">
+            <i class="fas fa-video"></i> Live View
+        </button>
+        <button class="nav-btn" id="logsTab">
+            <i class="fas fa-list"></i> Logs
+        </button>
+        <button class="nav-btn" id="settingsTab">
+            <i class="fas fa-cog"></i> Settings
+        </button>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+
+        <!-- LIVE PANEL -->
+        <div id="livePanel">
+
+            <!-- Main Live Feed -->
+            <div class="live-feed-main">
+                <div class="live-feed-header">
+                    <h3><i class="fas fa-map-marker-alt" style="color:#4caf50; margin-right:6px;"></i>Main Entrance — Camera 01</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div> LIVE
+                    </div>
+                </div>
+                <img id="liveFeedImg" class="live-feed-img"
+                     src="/video_feed"
+                     alt="Live Feed">
+            </div>
+
+            <!-- Stats Row — REAL DATA from Flask -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value">{{ active_cameras }}</div>
+                    <div class="stat-label">Active Cameras</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ active_sessions }}</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ login_attempts_today }}</div>
+                    <div class="stat-label">Login Attempts Today</div>
+                </div>
+                <div class="stat-card {% if failed_logins_today > 0 %}danger{% endif %}">
+                    <div class="stat-value">{{ failed_logins_today }}</div>
+                    <div class="stat-label">Failed Logins Today</div>
+                </div>
+                <div class="stat-card {% if blocked_ips_count > 0 %}warning{% endif %}">
+                    <div class="stat-value">{{ blocked_ips_count }}</div>
+                    <div class="stat-label">Blocked IPs</div>
+                </div>
+                <div class="stat-card {% if alerts_today > 0 %}danger{% endif %}">
+                    <div class="stat-value">{{ alerts_today }}</div>
+                    <div class="stat-label">AI Alerts Today</div>
+                </div>
+                <div class="stat-card {% if suspicious_today > 0 %}danger{% endif %}">
+                    <div class="stat-value">{{ suspicious_today }}</div>
+                    <div class="stat-label">Suspicious Events</div>
+                </div>
+            </div>
+
+            <!-- Blocked IPs list (only if any) -->
+            {% if blocked_ips_list %}
+            <div style="background:#fff5f5; border:1px solid #fdd; border-radius:14px; padding:1rem 1.2rem; margin-bottom:1.5rem;">
+                <div style="font-size:0.85rem; font-weight:600; color:#c62828; margin-bottom:0.5rem;">
+                    <i class="fas fa-ban"></i> IPs with 3+ failed logins today
+                </div>
+                <div class="blocked-ips-list">
+                    {% for ip in blocked_ips_list %}
+                    <span class="ip-pill">{{ ip }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- AI Alerts Section -->
+            <div class="alerts-section">
+                <div class="alerts-header">
+                    <h3><i class="fas fa-bell" style="color:#e65100; margin-right:8px;"></i>AI Alerts</h3>
+                    <span class="alert-badge {% if alerts_today == 0 %}zero{% endif %}">
+                        {{ alerts_today }} today
+                    </span>
+                </div>
+                {% if recent_alerts %}
+                    {% for alert in recent_alerts %}
+                    <div class="alert-item">
+                        <div class="alert-severity {{ alert.severity }}"></div>
+                        <div>
+                            <div class="alert-type">{{ alert.alert_type | replace('_', ' ') | title }}</div>
+                            {% if alert.description %}
+                            <div class="alert-desc">{{ alert.description }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="alert-time">{{ alert.timestamp.strftime('%H:%M:%S') }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-alerts">
+                        <i class="fas fa-check-circle" style="color:#2e7d32; margin-right:6px;"></i>
+                        No alerts recorded yet. System is clear.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Device Grid -->
+            <div class="device-grid">
+                <div class="device-card">
+                    <h4><i class="fas fa-network-wired"></i> Network Switch</h4>
+                    <div class="device-status online"><i class="fas fa-check-circle"></i> Online</div>
+                    <small>Ports: 24/24 active</small>
+                </div>
+                <div class="device-card">
+                    <h4><i class="fas fa-router"></i> Gateway Router</h4>
+                    <div class="device-status online"><i class="fas fa-check-circle"></i> Online</div>
+                    <small>Uptime 99.98%</small>
+                </div>
+                <div class="device-card">
+                    <h4><i class="fas fa-video"></i> IP Camera</h4>
+                    <div class="device-status online"><i class="fas fa-check-circle"></i> Online</div>
+                    <small>Firmware v2.1.0</small>
+                </div>
+                <div class="stat-block">
+                    <div><i class="fas fa-clock" style="color:#2e7d32;"></i> Recording today</div>
+                    <div class="stat-number" id="recordingHours">6.2</div>
+                    <div>hours of continuous archive</div>
+                    <hr>
+                    <div><i class="fas fa-running" style="color:#2e7d32;"></i> Motion events (24h)</div>
+                    <div class="stat-number" id="motionEvents">{{ alerts_today }}</div>
+                </div>
+            </div>
+
+            <div style="background:#fafef7; padding:0.8rem 0; font-size:0.8rem; text-align:center; border-radius:30px; color:#3f6b3f;">
+                <i class="fas fa-shield-alt"></i> Active protection | AI motion detection | Encrypted stream
+            </div>
+        </div>
+
+        <!-- LOGS PANEL -->
+        <div id="logsPanel" style="display:none;">
+
+            <!-- Login Logs -->
+            <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-sign-in-alt" style="color:#2e7d32; margin-right:8px;"></i>Login Logs</h3>
+            <div style="overflow-x:auto; margin-bottom:2rem;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+                    <thead>
+                        <tr style="background:#e8f5e8; color:#1e3a1e;">
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:12px 0 0 0;">#</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Username</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">IP Address</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Status</th>
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in login_logs %}
+                        <tr style="border-bottom:1px solid #eef3ee;">
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
+                            <td style="padding:0.7rem 1rem; font-weight:500; color:#1e3a1e;">{{ log.username }}</td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ log.ip_address }}</td>
+                            <td style="padding:0.7rem 1rem;">
+                                {% if log.status == 'success' %}
+                                    <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
+                                        <i class="fas fa-check-circle"></i> Success
+                                    </span>
+                                {% else %}
+                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
+                                        <i class="fas fa-times-circle"></i> Failed
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No login logs yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Camera Logs -->
+            <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-video" style="color:#2e7d32; margin-right:8px;"></i>Camera Logs</h3>
+            <div style="overflow-x:auto; margin-bottom:2rem;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+                    <thead>
+                        <tr style="background:#e8f5e8; color:#1e3a1e;">
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:12px 0 0 0;">#</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Event</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">IP Address</th>
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in camera_logs %}
+                        <tr style="border-bottom:1px solid #eef3ee;">
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
+                            <td style="padding:0.7rem 1rem;">
+                                <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
+                                    <i class="fas fa-circle" style="font-size:0.5rem;"></i> {{ log.event | capitalize }}
+                                </span>
+                            </td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ log.ip_address }}</td>
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No camera logs yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Activity Logs -->
+            <h3 style="color:#1e3a1e; margin-bottom:1rem; margin-top:1rem;">
+                <i class="fas fa-shield-alt" style="color:#1565c0; margin-right:8px;"></i>Activity Log
+                <span style="font-size:0.75rem; font-weight:400; color:#7a8a7a; margin-left:8px;">Admin actions & suspicious activity</span>
+            </h3>
+            <div style="overflow-x:auto; margin-bottom:2rem;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+                    <thead>
+                        <tr style="background:#e8f5e8; color:#1e3a1e;">
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:12px 0 0 0;">#</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Event</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Description</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">IP Address</th>
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in activity_logs %}
+                        <tr style="border-bottom:1px solid #eef3ee; {% if log.severity == 'suspicious' %}background:#fff8f8;{% endif %}">
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
+                            <td style="padding:0.7rem 1rem;">
+                                {% if log.severity == 'suspicious' %}
+                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ log.event | replace('_', ' ') }}
+                                    </span>
+                                {% else %}
+                                    <span style="background:#e8f0fe; color:#1565c0; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;">
+                                        <i class="fas fa-info-circle"></i> {{ log.event | replace('_', ' ') }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a; font-size:0.82rem;">{{ log.description or '—' }}</td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ log.ip_address }}</td>
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No activity recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Alert Logs -->
+            <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-bell" style="color:#e65100; margin-right:8px;"></i>AI Alert Logs</h3>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+                    <thead>
+                        <tr style="background:#e8f5e8; color:#1e3a1e;">
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:12px 0 0 0;">#</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Type</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Description</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Severity</th>
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in recent_alerts %}
+                        <tr style="border-bottom:1px solid #eef3ee;">
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
+                            <td style="padding:0.7rem 1rem; font-weight:500; color:#1e3a1e;">{{ alert.alert_type | replace('_', ' ') | title }}</td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ alert.description or '—' }}</td>
+                            <td style="padding:0.7rem 1rem;">
+                                {% if alert.severity == 'high' %}
+                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">High</span>
+                                {% elif alert.severity == 'medium' %}
+                                    <span style="background:#fff3e0; color:#e65100; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">Medium</span>
+                                {% else %}
+                                    <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">Low</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No AI alerts yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SETTINGS PANEL -->
+        <div id="settingsPanel" style="display:none;">
+            <div class="settings-placeholder">
+                <i class="fas fa-cog" style="font-size:3rem; color:#bdd4bd; margin-bottom:1rem; display:inline-block;"></i>
+                <h3 style="font-weight:500;">System Settings</h3>
+                <p>Recording schedule, motion sensitivity, network configuration & user management.</p>
+                <div style="background:#eff7ef; border-radius:60px; padding:0.6rem; margin-top:1rem; width:80%; margin-left:auto; margin-right:auto;">
+                    <i class="fas fa-lock"></i> Admin role: Full control • 2FA ready
+                </div>
+            </div>
+
+            <!-- Register new user — admin only -->
+            {% if session.get('role') == 'admin' %}
+            <div style="max-width:420px; margin: 2rem auto; background:white; border-radius:20px; padding:2rem; border:1px solid #e2efe2; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <h3 style="color:#1e3a1e; margin-bottom:0.3rem;">
+                    <i class="fas fa-user-plus" style="color:#2e7d32; margin-right:8px;"></i>Register New User
+                </h3>
+                <p style="font-size:0.8rem; color:#7a8a7a; margin-bottom:1.2rem;">Only admins can create accounts.</p>
+
+                {% if register_error %}
+                    <div style="background:#ffe9e9; color:#c62828; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; margin-bottom:1rem;">
+                        <i class="fas fa-exclamation-circle"></i> {{ register_error }}
+                    </div>
+                {% endif %}
+                {% if register_success %}
+                    <div style="background:#e8f5e8; color:#2e7d32; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; margin-bottom:1rem;">
+                        <i class="fas fa-check-circle"></i> {{ register_success }}
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="/register">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-size:0.85rem; color:#3a5a3a; font-weight:500;">Username</label>
+                        <input name="username" required
+                            style="width:100%; margin-top:0.4rem; padding:0.65rem 1rem; border:1.5px solid #cfdfcf; border-radius:10px; font-size:0.9rem; outline:none;"
+                            placeholder="3-50 letters, numbers, underscores">
+                    </div>
+                    <div style="margin-bottom:1.2rem;">
+                        <label style="font-size:0.85rem; color:#3a5a3a; font-weight:500;">Password</label>
+                        <input name="password" type="password" required
+                            style="width:100%; margin-top:0.4rem; padding:0.65rem 1rem; border:1.5px solid #cfdfcf; border-radius:10px; font-size:0.9rem; outline:none;"
+                            placeholder="Minimum 8 characters">
+                    </div>
+                    <button type="submit"
+                        style="width:100%; padding:0.75rem; background:#2e7d32; color:white; border:none; border-radius:40px; font-weight:600; font-size:0.95rem; cursor:pointer;">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <footer>
+            <i class="fas fa-shield-alt"></i> CCTV Monitoring System © 2025 — Encrypted • 24/7 surveillance ready
+        </footer>
+    </div>
+</div>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div id="logoutModal" class="modal-overlay">
+    <div class="confirm-modal">
+        <i class="fas fa-question-circle"></i>
+        <h3>Confirm logout</h3>
+        <p>Are you sure you want to end your session? You'll need to log in again to access the dashboard.</p>
+        <div class="modal-buttons">
+            <form method="POST" action="/logout" id="logoutForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            </form>
+            <button id="modalConfirmLogout" class="modal-btn modal-confirm">Yes, logout</button>
+            <button id="modalCancelLogout" class="modal-btn modal-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    const liveViewTab = document.getElementById('liveViewTab');
+    const logsTab = document.getElementById('logsTab');
+    const settingsTab = document.getElementById('settingsTab');
+    const livePanel = document.getElementById('livePanel');
+    const logsPanel = document.getElementById('logsPanel');
+    const settingsPanel = document.getElementById('settingsPanel');
+
+    function setActiveTab(tabName) {
+        livePanel.style.display = 'none';
+        logsPanel.style.display = 'none';
+        settingsPanel.style.display = 'none';
+        liveViewTab.classList.remove('active');
+        logsTab.classList.remove('active');
+        settingsTab.classList.remove('active');
+
+        if (tabName === 'live') {
+            livePanel.style.display = 'block';
+            liveViewTab.classList.add('active');
+        } else if (tabName === 'logs') {
+            logsPanel.style.display = 'block';
+            logsTab.classList.add('active');
+        } else {
+            settingsPanel.style.display = 'block';
+            settingsTab.classList.add('active');
+        }
+    }
+
+    liveViewTab.addEventListener('click', () => setActiveTab('live'));
+    logsTab.addEventListener('click', () => setActiveTab('logs'));
+    settingsTab.addEventListener('click', () => setActiveTab('settings'));
+
+    // Logout modal
+    const logoutModal = document.getElementById('logoutModal');
+    const logoutButton = document.getElementById('logoutButton');
+    const modalConfirm = document.getElementById('modalConfirmLogout');
+    const modalCancel = document.getElementById('modalCancelLogout');
+
+    logoutButton.addEventListener('click', () => logoutModal.classList.add('active'));
+    modalCancel.addEventListener('click', () => logoutModal.classList.remove('active'));
+    logoutModal.addEventListener('click', (e) => {
+        if (e.target === logoutModal) logoutModal.classList.remove('active');
+    });
+
+    // Confirm logout → submits POST form with CSRF token
+    modalConfirm.addEventListener('click', () => {
+        document.getElementById('logoutForm').submit();
+    });
+
+    // Recording hours counter (cosmetic)
+    function updateStatsPeriodically() {
+        const recordingSpan = document.getElementById('recordingHours');
+        setInterval(() => {
+            let h = parseFloat(recordingSpan.innerText) || 6.2;
+            h += 0.028;
+            if (h > 24) h = 5.8;
+            recordingSpan.innerText = h.toFixed(1);
+        }, 9800);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        updateStatsPeriodically();
+    });
+</script>
+</body>
+</html>

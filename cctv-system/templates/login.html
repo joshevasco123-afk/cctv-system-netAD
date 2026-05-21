@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CCTV Monitoring System | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f4f7fc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            background: white;
+            max-width: 420px;
+            width: 100%;
+            padding: 2.2rem 2rem 2.5rem;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.03);
+            text-align: center;
+            border: 1px solid #e9f0e9;
+        }
+
+        .login-card h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: #1a2e1f;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-sub {
+            color: #5a6e5a;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2efe2;
+            display: inline-block;
+            padding-bottom: 0.25rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c3e2c;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group i {
+            margin-right: 8px;
+            color: #2e7d32;
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 1.5px solid #dee6de;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .input-group input:focus {
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46,125,50,0.15);
+        }
+
+        .login-btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .login-btn:hover {
+            background: #1b5e20;
+            transform: scale(0.98);
+        }
+
+        .error-msg {
+            background: #ffe9e9;
+            color: #c62828;
+            padding: 0.7rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            border-left: 3px solid #c62828;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-msg.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card" id="loginCard">
+            <h1>🔒 CCTV Admin</h1>
+            <div class="login-sub">Secure Monitoring Portal</div>
+
+           <!-- POST to Flask /login route -->
+<form id="loginForm" action="/login" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="input-group">
+        <label><i class="fas fa-user"></i>Username</label>
+        <input type="text" name="username" id="username" placeholder="Enter admin username" autocomplete="username" required>
+    </div>
+    <div class="input-group">
+        <label><i class="fas fa-lock"></i>Password</label>
+        <input type="password" name="password" id="password" placeholder="Enter password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="login-btn">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+    </button>
+</form>
+
+            <!-- Show error if Flask returns invalid credentials -->
+            <div class="error-msg {% if error %}show{% endif %}" id="loginError">
+                <i class="fas fa-exclamation-circle"></i> Invalid username or password.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Shake card on error
+        window.addEventListener('DOMContentLoaded', () => {
+            const errorDiv = document.getElementById('loginError');
+            if (errorDiv.classList.contains('show')) {
+                const card = document.getElementById('loginCard');
+                card.style.transition = 'transform 0.1s ease';
+                card.style.transform = 'translateX(6px)';
+                setTimeout(() => card.style.transform = 'translateX(-6px)', 100);
+                setTimeout(() => card.style.transform = '', 200);
+            }
+        });
+    </script>
+</body>
+</html>
