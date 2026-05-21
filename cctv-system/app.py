@@ -19,23 +19,18 @@ import hmac
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# ─── Session lifetime (fallback if not set in Config) ─────────────────
 app.config.setdefault("PERMANENT_SESSION_LIFETIME", timedelta(minutes=30))
 
-# ─── Zero Hardcoded Secrets Policy ───────────────────────────────────
-# All secrets pulled from environment variables only
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 app.config.setdefault("SQLALCHEMY_DATABASE_URI", os.environ.get("DATABASE_URL", "sqlite:///cctv.db"))
 app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
 
-# ─── Cryptographic Pepper ─────────────────────────────────────────────
 PEPPER = os.environ.get("CRYPTOGRAPHIC_PEPPER", "FallbackSuperSecretPepper2026!")
 
-# ─── Anti-Session Hijacking: Cookie Security ─────────────────────────
 app.config.update(
-    SESSION_COOKIE_SECURE=True,       # HTTPS only
-    SESSION_COOKIE_HTTPONLY=True,     # Block JS access (anti-XSS cookie theft)
-    SESSION_COOKIE_SAMESITE="Strict"  # Block cross-site cookie transmission (anti-CSRF)
+    SESSION_COOKIE_SECURE=False,      # Set True only when using HTTPS
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax"     # Changed from Strict so POST redirects work
 )
 
 # ─── Extensions ───────────────────────────────────────────────────────
@@ -48,11 +43,11 @@ limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"  # RAM-only, no disk persistence
+    storage_uri="memory://"
 )
 
 # ─── In-memory IP failure tracking ───────────────────────────────────
-IP_FAILED_ATTEMPTS = {}  # { ip: [failure_count, last_failure_timestamp] }
+IP_FAILED_ATTEMPTS = {}
 
 
 # ======================================================================
@@ -60,7 +55,6 @@ IP_FAILED_ATTEMPTS = {}  # { ip: [failure_count, last_failure_timestamp] }
 # ======================================================================
 
 def get_sanitized_ip():
-    """Reverse proxy-aware IP extractor with sanitization."""
     if request.headers.get("X-Forwarded-For"):
         ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
     else:
@@ -69,12 +63,10 @@ def get_sanitized_ip():
 
 
 def secure_session_destruct():
-    """Wipes all session data on logout, timeout, or conflict."""
     session.clear()
 
 
 def render_with_error(err_msg):
-    """Returns login page with a generic error message."""
     return make_response(render_template("login.html", error=err_msg))
 
 
@@ -85,28 +77,26 @@ def render_with_error(err_msg):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("is_admin") or not session.get("user_id"):
-            return redirect(url_for("auth.login"))
+        # FIX: check session["user"] so dashboard.py decorators also work
+        if not session.get("user"):
+            return redirect(url_for("login"))
 
         now = time.time()
 
-        # Idle timeout: 15 minutes
         last_activity = session.get("last_activity", now)
         if (now - last_activity) > 900:
             secure_session_destruct()
-            return redirect(url_for("auth.login", error="Session expired due to inactivity."))
+            return redirect(url_for("login"))
 
-        # Absolute timeout: 1 hour
         login_time = session.get("login_time", now)
         if (now - login_time) > 3600:
             secure_session_destruct()
-            return redirect(url_for("auth.login", error="Absolute session timeout reached."))
+            return redirect(url_for("login"))
 
-        # Single active session enforcement
         active_token = app.config.get(f"ACTIVE_SESSION_{session.get('user_id')}")
         if session.get("session_token") != active_token:
             secure_session_destruct()
-            return redirect(url_for("auth.login", error="Logged out: Another device accessed this account."))
+            return redirect(url_for("login"))
 
         session["last_activity"] = now
         return f(*args, **kwargs)
@@ -139,7 +129,7 @@ def inject_security_headers(response):
 
 
 # ======================================================================
-# HONEYPOT TRAPS (recon bait — returns 404 to confuse scanners)
+# HONEYPOT TRAPS
 # ======================================================================
 
 from flask import abort
@@ -166,11 +156,13 @@ app.register_blueprint(camera_bp)
 
 
 # ======================================================================
-# AUTH ROUTES (login / logout)
-# NOTE: These live here to use the app-level IP tracking dict and limiter.
-#       Move to routes/auth.py if you refactor IP_FAILED_ATTEMPTS to a
-#       shared module (e.g. utils/security.py).
+# LOGIN / LOGOUT ROUTES
 # ======================================================================
+
+@app.route("/", methods=["GET"])
+def index():
+    return redirect(url_for("login"))
+
 
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
@@ -182,79 +174,71 @@ def login():
     if client_ip in IP_FAILED_ATTEMPTS:
         failures, lockout_time = IP_FAILED_ATTEMPTS[client_ip]
         if failures >= 10:
-            if now - lockout_time < 300:  # 5-minute lockout window
+            if now - lockout_time < 300:
                 return render_with_error("IP temporarily locked out. Try again later.")
             else:
-                IP_FAILED_ATTEMPTS[client_ip] = [0, 0]  # Reset after lockout expires
+                IP_FAILED_ATTEMPTS[client_ip] = [0, 0]
 
     if request.method == "POST":
-        # ── Input sanitization ───────────────────────────────────────
-        input_user = "".join(c for c in request.form.get("username", "") if c.isalnum())
+        input_user = "".join(c for c in request.form.get("username", "") if c.isalnum() or c == "_")
         input_pass = request.form.get("password", "")
         input_otp  = request.form.get("otp", "")
 
-        # ── Env-stored credentials ───────────────────────────────────
-        env_admin_user   = os.environ.get("ADMIN_USERNAME", "admin")
-        env_admin_hash   = os.environ.get("ADMIN_PASSWORD_HASH")   # bcrypt hash, NOT plaintext
-        env_mfa_secret   = os.environ.get("ADMIN_MFA_SECRET", "JBSWY3DPEHPK3PXP")
+        env_admin_user = os.environ.get("ADMIN_USERNAME", "admin")
+        env_admin_hash = os.environ.get("ADMIN_PASSWORD_HASH")
+        env_mfa_secret = os.environ.get("ADMIN_MFA_SECRET", "JBSWY3DPEHPK3PXP")
 
-        # ── Progressive delay (slows brute-force even within rate limit window) ──
+        # Progressive delay
         if client_ip in IP_FAILED_ATTEMPTS:
             failures = IP_FAILED_ATTEMPTS[client_ip][0]
             if failures > 0:
-                time.sleep(min(0.5 * failures, 10))  # Cap at 10s to avoid DoS
+                time.sleep(min(0.5 * failures, 10))
 
-        # ── Username check (constant-time) ───────────────────────────
+        # Username check (constant-time)
         username_match = hmac.compare_digest(
             input_user.encode("utf-8"),
             env_admin_user.encode("utf-8")
         )
 
-        # ── Password check via bcrypt + pepper ───────────────────────
-        # The stored hash was generated from: bcrypt(password + PEPPER)
-        # To generate: bcrypt.generate_password_hash(raw_password + PEPPER).decode("utf-8")
+        # Password check via bcrypt + pepper
         peppered_input = input_pass + PEPPER
         password_match = (
             env_admin_hash is not None
             and bcrypt.check_password_hash(env_admin_hash, peppered_input)
         )
 
-        # ── TOTP / 2FA check ─────────────────────────────────────────
+        # TOTP / 2FA check
         totp = pyotp.TOTP(env_mfa_secret)
         otp_match = totp.verify(input_otp)
 
-        # ── All three factors must pass ───────────────────────────────
         if username_match and password_match and otp_match:
             IP_FAILED_ATTEMPTS[client_ip] = [0, 0]
 
-            # Session regeneration (anti-session fixation)
             secure_session_destruct()
             session.permanent = True
             session["is_admin"]      = True
+            session["user"]          = env_admin_user   # FIX: set "user" for dashboard decorators
+            session["role"]          = "admin"           # FIX: set "role" for admin_required
             session["user_id"]       = "admin_01"
             session["login_time"]    = now
             session["last_activity"] = now
             session["session_token"] = secrets.token_hex(32)
 
-            # Single active session enforcement
             app.config["ACTIVE_SESSION_admin_01"] = session["session_token"]
 
-            # Audit log
             log = CameraLog(event="ADMIN_LOGIN_SUCCESSFUL", ip_address=client_ip)
             db.session.add(log)
             db.session.commit()
 
-            return redirect(url_for("dashboard_bp.index"))
+            return redirect(url_for("dashboard.dashboard"))  # FIX: correct endpoint name
 
         else:
-            # Track failure
             if client_ip not in IP_FAILED_ATTEMPTS:
                 IP_FAILED_ATTEMPTS[client_ip] = [1, now]
             else:
                 IP_FAILED_ATTEMPTS[client_ip][0] += 1
                 IP_FAILED_ATTEMPTS[client_ip][1] = now
 
-            # Audit log
             log = CameraLog(
                 event=f"UNAUTHORIZED_LOGIN_ATTEMPT_USER_{input_user}",
                 ip_address=client_ip
@@ -262,13 +246,12 @@ def login():
             db.session.add(log)
             db.session.commit()
 
-            # Generic error — no username enumeration
             return render_with_error("Invalid administrative credentials or verification token.")
 
     return render_template("login.html")
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])  # FIX: POST only, requires CSRF token
 def logout():
     client_ip = get_sanitized_ip()
     log = CameraLog(event="ADMIN_LOGOUT_REQUESTED", ip_address=client_ip)
@@ -276,7 +259,7 @@ def logout():
     db.session.commit()
 
     secure_session_destruct()
-    return redirect(url_for("login", message="Successfully logged out of secure boundary."))
+    return redirect(url_for("login"))
 
 
 # ======================================================================
