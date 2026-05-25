@@ -77,7 +77,6 @@ def render_with_error(err_msg):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # FIX: check session["user"] so dashboard.py decorators also work
         if not session.get("user"):
             return redirect(url_for("login"))
 
@@ -164,6 +163,7 @@ def index():
     return redirect(url_for("login"))
 
 
+# ── STEP 1: Username + Password ───────────────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
 def login():
@@ -182,11 +182,9 @@ def login():
     if request.method == "POST":
         input_user = "".join(c for c in request.form.get("username", "") if c.isalnum() or c == "_")
         input_pass = request.form.get("password", "")
-        input_otp  = request.form.get("otp", "")
 
         env_admin_user = os.environ.get("ADMIN_USERNAME", "admin")
         env_admin_hash = os.environ.get("ADMIN_PASSWORD_HASH")
-        env_mfa_secret = os.environ.get("ADMIN_MFA_SECRET", "JBSWY3DPEHPK3PXP")
 
         # Progressive delay
         if client_ip in IP_FAILED_ATTEMPTS:
@@ -207,30 +205,13 @@ def login():
             and bcrypt.check_password_hash(env_admin_hash, peppered_input)
         )
 
-        # TOTP / 2FA check
-        totp = pyotp.TOTP(env_mfa_secret)
-        otp_match = totp.verify(input_otp)
-
-        if username_match and password_match and otp_match:
-            IP_FAILED_ATTEMPTS[client_ip] = [0, 0]
-
-            secure_session_destruct()
-            session.permanent = True
-            session["is_admin"]      = True
-            session["user"]          = env_admin_user   # FIX: set "user" for dashboard decorators
-            session["role"]          = "admin"           # FIX: set "role" for admin_required
-            session["user_id"]       = "admin_01"
-            session["login_time"]    = now
-            session["last_activity"] = now
-            session["session_token"] = secrets.token_hex(32)
-
-            app.config["ACTIVE_SESSION_admin_01"] = session["session_token"]
-
-            log = CameraLog(event="ADMIN_LOGIN_SUCCESSFUL", ip_address=client_ip)
-            db.session.add(log)
-            db.session.commit()
-
-            return redirect(url_for("dashboard.dashboard"))  # FIX: correct endpoint name
+        if username_match and password_match:
+            # ── Credentials valid — store pending state, go to OTP step ──
+            # Do NOT create full session yet; only mark that step 1 passed.
+            session["otp_pending"] = True
+            session["otp_user"]    = env_admin_user
+            session["otp_ip"]      = client_ip
+            return redirect(url_for("verify_otp"))
 
         else:
             if client_ip not in IP_FAILED_ATTEMPTS:
@@ -246,12 +227,80 @@ def login():
             db.session.add(log)
             db.session.commit()
 
-            return render_with_error("Invalid administrative credentials or verification token.")
+            return render_with_error("Invalid administrative credentials.")
 
+    # Clear any stale OTP pending state when landing on login page
+    session.pop("otp_pending", None)
+    session.pop("otp_user", None)
+    session.pop("otp_ip", None)
     return render_template("login.html")
 
 
-@app.route("/logout", methods=["POST"])  # FIX: POST only, requires CSRF token
+# ── STEP 2: OTP Verification ──────────────────────────────────────────
+@app.route("/verify-otp", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+def verify_otp():
+    # Guard: only reachable after step 1 passes
+    if not session.get("otp_pending"):
+        return redirect(url_for("login"))
+
+    client_ip = get_sanitized_ip()
+    now = time.time()
+
+    if request.method == "POST":
+        input_otp      = request.form.get("otp", "").strip()
+        env_mfa_secret = os.environ.get("ADMIN_MFA_SECRET", "JBSWY3DPEHPK3PXP")
+        env_admin_user = session.get("otp_user", "admin")
+
+        totp      = pyotp.TOTP(env_mfa_secret)
+        otp_match = totp.verify(input_otp, valid_window=1)  # allow ±1 window (90s tolerance)
+
+        if otp_match:
+            # ── OTP passed — clear pending flags, create full session ──
+            session.pop("otp_pending", None)
+            session.pop("otp_user", None)
+            session.pop("otp_ip", None)
+
+            # Rebuild session cleanly (don't keep leftover pending keys)
+            secure_session_destruct()
+            session.permanent    = True
+            session["is_admin"]  = True
+            session["user"]      = env_admin_user
+            session["role"]      = "admin"
+            session["user_id"]   = "admin_01"
+            session["login_time"]    = now
+            session["last_activity"] = now
+            session["session_token"] = secrets.token_hex(32)
+
+            app.config["ACTIVE_SESSION_admin_01"] = session["session_token"]
+
+            log = CameraLog(event="ADMIN_LOGIN_SUCCESSFUL", ip_address=client_ip)
+            db.session.add(log)
+            db.session.commit()
+
+            return redirect(url_for("dashboard.dashboard"))
+
+        else:
+            # Wrong OTP — still count as a failure for IP tracking
+            if client_ip not in IP_FAILED_ATTEMPTS:
+                IP_FAILED_ATTEMPTS[client_ip] = [1, now]
+            else:
+                IP_FAILED_ATTEMPTS[client_ip][0] += 1
+                IP_FAILED_ATTEMPTS[client_ip][1] = now
+
+            log = CameraLog(
+                event=f"INVALID_OTP_ATTEMPT_USER_{env_admin_user}",
+                ip_address=client_ip
+            )
+            db.session.add(log)
+            db.session.commit()
+
+            return make_response(render_template("otp.html", error="Invalid or expired code."))
+
+    return render_template("otp.html")
+
+
+@app.route("/logout", methods=["POST"])
 def logout():
     client_ip = get_sanitized_ip()
     log = CameraLog(event="ADMIN_LOGOUT_REQUESTED", ip_address=client_ip)
