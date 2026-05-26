@@ -1,1 +1,4 @@
 2026-05-21 10:03:45,472 - [INFO] - IP: 192.168.18.7 | EVENT: ADMIN_LOGIN_SUCCESS | DESC: User admin logged in successfully.
+2026-05-27 01:28:59,227 - [INFO] - IP: 192.168.18.7 | EVENT: ADMIN_REGISTERED_USER | DESC: Admin admin successfully registered new user Viewer1.
+2026-05-27 02:28:10,992 - [INFO] - IP: 192.168.18.7 | EVENT: ADMIN_REGISTER_FAILED | DESC: Admin admin tried to register already-existing username Viewer1.
+2026-05-27 02:30:50,803 - [INFO] - IP: 192.168.18.7 | EVENT: ADMIN_REGISTERED_USER | DESC: Admin admin successfully registered new user Viewer1.

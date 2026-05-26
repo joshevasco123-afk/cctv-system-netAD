@@ -9,6 +9,7 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), default='viewer')
+    otp_secret = db.Column(db.String(32), nullable=True)   # ← NEW: per-user TOTP secret
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class LoginLog(db.Model):

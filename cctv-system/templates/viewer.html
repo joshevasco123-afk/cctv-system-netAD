@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CCTV Monitor | Live Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:        #0b0f0e;
+            --surface:   #111614;
+            --border:    #1e2722;
+            --accent:    #00e676;
+            --accent-dim:#00c853;
+            --text:      #e8f5e9;
+            --muted:     #607d6b;
+            --danger:    #ff5252;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Syne', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Top bar ───────────────────────────────────────────────── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1.75rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--accent);
+        }
+
+        .logo i { font-size: 1.1rem; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--border);
+            border-radius: 999px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.78rem;
+            font-family: 'DM Mono', monospace;
+            color: var(--muted);
+        }
+
+        .user-chip i { color: var(--accent); font-size: 0.7rem; }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-family: 'DM Mono', monospace;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.4; transform: scale(0.75); }
+        }
+
+        /* ── Logout button ─────────────────────────────────────────── */
+        .logout-form button {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: 'Syne', sans-serif;
+            font-size: 0.78rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .logout-form button:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* ── Main feed area ────────────────────────────────────────── */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            gap: 1.25rem;
+        }
+
+        .feed-container {
+            width: 100%;
+            max-width: 960px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,230,118,0.04);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .feed-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feed-title {
+            font-size: 0.8rem;
+            font-family: 'DM Mono', monospace;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .feed-title span {
+            color: var(--accent);
+            margin-right: 0.5rem;
+        }
+
+        .feed-meta {
+            font-size: 0.72rem;
+            font-family: 'DM Mono', monospace;
+            color: var(--muted);
+        }
+
+        .feed-body {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #080b0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feed-body img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Scanline overlay */
+        .feed-body::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 3px,
+                rgba(0,0,0,0.08) 3px,
+                rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none;
+        }
+
+        .feed-offline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--muted);
+        }
+
+        .feed-offline i { font-size: 2.5rem; opacity: 0.3; }
+
+        .feed-offline p {
+            font-size: 0.82rem;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Timestamp bar ─────────────────────────────────────────── */
+        .feed-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .timestamp {
+            font-size: 0.72rem;
+            font-family: 'DM Mono', monospace;
+            color: var(--muted);
+        }
+
+        #clock { color: var(--accent); }
+
+        .viewer-notice {
+            font-size: 0.7rem;
+            font-family: 'DM Mono', monospace;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .viewer-notice i { font-size: 0.65rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <i class="fas fa-video"></i>
+        CCTV MONITOR
+    </div>
+    <div class="header-right">
+        <div class="live-badge">
+            <span class="live-dot"></span>
+            Live
+        </div>
+        <div class="user-chip">
+            <i class="fas fa-circle"></i>
+            {{ username }}
+        </div>
+        <form class="logout-form" action="/viewer-logout" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    </div>
+</header>
+
+<main>
+    <div class="feed-container">
+        <div class="feed-header">
+            <div class="feed-title"><span>●</span> CAM 01 — MAIN FEED</div>
+            <div class="feed-meta">READ-ONLY VIEW</div>
+        </div>
+
+        <div class="feed-body">
+            <img src="/video_feed" alt="Live Camera Feed"
+                 onerror="this.style.display='none'; document.getElementById('offline-msg').style.display='flex';">
+            <div class="feed-offline" id="offline-msg" style="display:none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>FEED UNAVAILABLE</p>
+            </div>
+        </div>
+
+        <div class="feed-footer">
+            <div class="timestamp">
+                <span id="clock"></span>
+            </div>
+            <div class="viewer-notice">
+                <i class="fas fa-lock"></i>
+                Viewer access — camera feed only
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const str = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} `
+                  + `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        document.getElementById('clock').textContent = str;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>

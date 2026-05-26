@@ -12,7 +12,12 @@ logger_bp = Blueprint('logger', __name__)
 # =====================================================================
 # HARDENING MODULE IX: Web-Root Isolation & Log Rotation Config
 # =====================================================================
-LOG_FILE_PATH = os.environ.get('SECURE_LOG_PATH', '/tmp/secure_cctv_system.log')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_LOG_PATH = os.path.join(BASE_DIR, 'logs', 'secure_cctv_system.log')
+LOG_FILE_PATH = os.environ.get('SECURE_LOG_PATH', DEFAULT_LOG_PATH)
+
+# Ensure logs directory exists
+os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
 
 secure_file_handler = RotatingFileHandler(LOG_FILE_PATH, maxBytes=5 * 1024 * 1024, backupCount=5)
 secure_file_handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s'))
@@ -33,14 +38,14 @@ def secure_admin_required(f):
             
         now = time.time()
         if now - session.get('last_activity', now) > 900:
-            session.clear() # Linisin ang session cookies para sa proteksyon
+            session.clear()
             return abort(401, description="Session Expired: Please Re-authenticate")
             
         current_agent = request.headers.get('User-Agent', '')
         if session.get('user_agent') != current_agent:
             return abort(401, description="Security Violation: Session Footprint Changed")
             
-        session['last_activity'] = now # I-update ang rolling timeout check
+        session['last_activity'] = now
         return f(*args, **kwargs)
     return decorated_function
 
@@ -51,16 +56,11 @@ def sanitize_log_input(raw_data):
     if not raw_data:
         return "EMPTY_FIELD"
     
-    # Basagin ang CRLF at Log Injection vectors
     clean_string = str(raw_data).replace('\n', '\\n').replace('\r', '\\r')
-    
-    # Ligtas na alphanumeric, brackets, spaces, at logging symbols lamang
     clean_string = re.sub(r'[^\w\s\.\-\:\[\]\_]', '', clean_string)
     
-    # HARDENING FIX: Substring Redaction sa halip na burahin ang buong mensahe
     sensitive_keywords = ['password', 'secret', 'token', 'pass', 'api_key', 'cookie']
     for keyword in sensitive_keywords:
-        # Gagamit ng case-insensitive regex substitution para palitan lamang ang sensitibong salita
         pattern = re.compile(re.escape(keyword), re.IGNORECASE)
         clean_string = pattern.sub("[REDACTED_SENSITIVE_KEYWORD]", clean_string)
             
@@ -78,35 +78,34 @@ def get_audit_ip():
 # =====================================================================
 # CORE LOGGING OPERATIONS (Immutable Append-Only Infrastructure)
 # =====================================================================
-def emit_secure_log(event_type, description):
+def emit_secure_log(event_type, description, ip_address=None):
     try:
-        client_ip = get_audit_ip()
+        client_ip = ip_address if ip_address else get_audit_ip()
         sanitized_event = sanitize_log_input(event_type)
         sanitized_desc = sanitize_log_input(description)
         
         allowed_events = [
             'ADMIN_LOGIN_SUCCESSFUL', 'UNAUTHORIZED_LOGIN_ATTEMPT', 
             'SECURE_STREAM_STARTED', 'ADMIN_LOGOUT_REQUESTED', 
-            'SYSTEM_MODIFICATION_ATTEMPT'
+            'SYSTEM_MODIFICATION_ATTEMPT', 'ADMIN_REGISTER_FAILED',
+            'ADMIN_REGISTERED_USER'
         ]
         if sanitized_event not in allowed_events:
             sanitized_event = "FILTERED_GENERIC_SECURITY_EVENT"
 
-        # 1. Isulat sa physical rotating local file structure
         log_payload = f"IP: {client_ip} | EVENT: {sanitized_event} | DESC: {sanitized_desc}"
         app_logger.info(log_payload)
 
-        # 2. HARDENING FIX: Isinama ang description para mai-save din sa SQL model integration
         new_log = CameraLog(
             event=sanitized_event, 
-            description=sanitized_desc,  # Siguraduhing may ganitong field sa iyong db.Model definition
+            description=sanitized_desc,
             ip_address=client_ip
         )
         db.session.add(new_log)
         db.session.commit()
         
     except Exception:
-        db.session.rollback() # Siguraduhing walang maiiwang hanging transaction state
+        db.session.rollback()
 
 # =====================================================================
 # CORE SECURED ROUTE ENDPOINTS & HANDSHAKES
@@ -139,8 +138,6 @@ def view_audit_trail():
 # =====================================================================
 @logger_bp.after_request
 def apply_endpoint_cors_lockdown(response):
-    # HARDENING FIX: Ganap na pinapatay ang cross-origin visibility.
-    # Tinanggal ang "null" value assignment para maiwasan ang local sandboxed execution bypasses.
     if "Access-Control-Allow-Origin" in response.headers:
         del response.headers["Access-Control-Allow-Origin"]
         

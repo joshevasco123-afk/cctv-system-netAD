@@ -1,7 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, session, url_for, abort
+from flask import Blueprint, render_template, request, redirect, session, url_for, abort, current_app
 from flask_bcrypt import Bcrypt
 from database.models import db, User, LoginLog
 from functools import wraps
+from routes.logger import emit_secure_log
+import pyotp
+import qrcode
+import io
+import base64
 import re
 
 auth = Blueprint('auth', __name__)
@@ -37,7 +42,6 @@ def admin_required(f):
 @login_required
 @admin_required
 def register():
-    from logger import emit_secure_log
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
@@ -72,8 +76,22 @@ def register():
             return redirect(url_for("dashboard.dashboard",
                 register_error="Username already exists."))
 
-        hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-        new_user = User(username=username, password=hashed_password, role="viewer")
+        # ── Generate OTP secret for the new viewer ────────────────────
+        otp_secret = pyotp.random_base32()
+        totp = pyotp.TOTP(otp_secret)
+        otp_uri = totp.provisioning_uri(name=username, issuer_name="CCTV Monitor")
+
+        # Generate QR code as base64 PNG
+        qr = qrcode.make(otp_uri)
+        buffer = io.BytesIO()
+        qr.save(buffer, format="PNG")
+        qr_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+        # ── Hash password with pepper ─────────────────────────────────
+        pepper = current_app.config.get("PEPPER", "FallbackSuperSecretPepper2026!")
+        peppered_password = password + pepper
+        hashed_password = bcrypt.generate_password_hash(peppered_password).decode("utf-8")
+        new_user = User(username=username, password=hashed_password, role="viewer", otp_secret=otp_secret)
         db.session.add(new_user)
         db.session.commit()
 
@@ -82,7 +100,12 @@ def register():
             f"Admin '{admin_user}' successfully registered new user '{username}'.",
             ip_address=ip_address
         )
-        return redirect(url_for("dashboard.dashboard",
-            register_success=f"User '{username}' created successfully."))
+
+        # Redirect to register_success page with QR code
+        return render_template("register_success.html",
+            username=username,
+            qr_code=qr_b64,
+            otp_secret=otp_secret
+        )
 
     return redirect(url_for("dashboard.dashboard"))

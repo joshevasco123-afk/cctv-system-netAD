@@ -103,9 +103,3 @@ def dashboard():
                            active_cameras=active_cameras,
                            alerts_today=alerts_today,
                            suspicious_today=suspicious_today)
-
-# ─── Viewer dashboard ──────────────────────────────────────────────────────────
-@dashboard_bp.route("/viewer")
-@login_required
-def viewer_dashboard():
-    return render_template("viewer_dashboard.html", user=session["user"])

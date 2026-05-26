@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCTV Monitor | User Created</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body {
+            background: #f4f7fc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .card {
+            background: white;
+            max-width: 460px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.15);
+            text-align: center;
+            border: 1px solid #e9f0e9;
+        }
+        .badge {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #1a2e1f;
+            margin-bottom: 0.4rem;
+        }
+        .sub {
+            color: #5a6e5a;
+            font-size: 0.88rem;
+            margin-bottom: 1.5rem;
+        }
+        .qr-wrapper {
+            background: #f8fdf8;
+            border: 2px dashed #b2d8b2;
+            border-radius: 20px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            width: 100%;
+        }
+        .qr-wrapper img {
+            width: 180px;
+            height: 180px;
+            border-radius: 12px;
+        }
+        .qr-label {
+            font-size: 0.78rem;
+            color: #5a6e5a;
+            margin-top: 0.6rem;
+        }
+        .secret-box {
+            background: #f0f4f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #1a2e1f;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+            word-break: break-all;
+        }
+        .secret-label {
+            font-size: 0.78rem;
+            color: #7a8e7a;
+            margin-bottom: 0.4rem;
+            text-align: left;
+        }
+        .warning {
+            background: #fff8e1;
+            border-left: 3px solid #f9a825;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            color: #795548;
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+        .warning i { color: #f9a825; margin-right: 6px; }
+        .btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #1b5e20; transform: scale(0.98); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">✅</div>
+        <h1>User Created!</h1>
+        <p class="sub">Account <strong>{{ username }}</strong> is ready. Share the QR code below with the user so they can set up Google Authenticator.</p>
+
+        <div class="qr-wrapper">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+            <p class="qr-label"><i class="fas fa-qrcode"></i> Scan with Google Authenticator</p>
+        </div>
+
+        <p class="secret-label"><i class="fas fa-key"></i> Manual entry key (if QR won't scan):</p>
+        <div class="secret-box">{{ otp_secret }}</div>
+
+        <div class="warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Show this once only.</strong> This QR code will not be shown again. Make sure the user scans it now before leaving this page.
+        </div>
+
+        <a href="/dashboard" class="btn">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</body>
+</html>

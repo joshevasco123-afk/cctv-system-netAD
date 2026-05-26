@@ -28,9 +28,9 @@ app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
 PEPPER = os.environ.get("CRYPTOGRAPHIC_PEPPER", "FallbackSuperSecretPepper2026!")
 
 app.config.update(
-    SESSION_COOKIE_SECURE=False,      # Set True only when using HTTPS
+    SESSION_COOKIE_SECURE=False,
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax"     # Changed from Strict so POST redirects work
+    SESSION_COOKIE_SAMESITE="Lax"
 )
 
 # ─── Extensions ───────────────────────────────────────────────────────
@@ -148,10 +148,14 @@ def sensitive_path_block():
 from routes.auth import auth
 from routes.dashboard import dashboard_bp
 from routes.camera import camera_bp
+from routes.blocked import blocked_bp
+from routes.viewer import viewer_bp
 
 app.register_blueprint(auth)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(camera_bp)
+app.register_blueprint(blocked_bp)
+app.register_blueprint(viewer_bp)
 
 
 # ======================================================================
@@ -163,6 +167,31 @@ def index():
     return redirect(url_for("login"))
 
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    client_ip = get_sanitized_ip()
+    log = CameraLog(event="ADMIN_LOGOUT_REQUESTED", ip_address=client_ip)
+    db.session.add(log)
+    db.session.commit()
+
+    secure_session_destruct()
+    return redirect(url_for("login"))
+
+
+@app.route("/viewer-logout", methods=["POST"])
+def viewer_logout():
+    client_ip = get_sanitized_ip()
+    log = CameraLog(
+        event="VIEWER_LOGOUT_REQUESTED",
+        username=session.get("user"),
+        ip_address=client_ip
+    )
+    db.session.add(log)
+    db.session.commit()
+
+    secure_session_destruct()
+    return redirect(url_for("viewer_login"))
+
 # ── STEP 1: Username + Password ───────────────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
@@ -170,7 +199,6 @@ def login():
     client_ip = get_sanitized_ip()
     now = time.time()
 
-    # ── IP Lockout check ─────────────────────────────────────────────
     if client_ip in IP_FAILED_ATTEMPTS:
         failures, lockout_time = IP_FAILED_ATTEMPTS[client_ip]
         if failures >= 10:
@@ -186,19 +214,16 @@ def login():
         env_admin_user = os.environ.get("ADMIN_USERNAME", "admin")
         env_admin_hash = os.environ.get("ADMIN_PASSWORD_HASH")
 
-        # Progressive delay
         if client_ip in IP_FAILED_ATTEMPTS:
             failures = IP_FAILED_ATTEMPTS[client_ip][0]
             if failures > 0:
                 time.sleep(min(0.5 * failures, 10))
 
-        # Username check (constant-time)
         username_match = hmac.compare_digest(
             input_user.encode("utf-8"),
             env_admin_user.encode("utf-8")
         )
 
-        # Password check via bcrypt + pepper
         peppered_input = input_pass + PEPPER
         password_match = (
             env_admin_hash is not None
@@ -206,8 +231,6 @@ def login():
         )
 
         if username_match and password_match:
-            # ── Credentials valid — store pending state, go to OTP step ──
-            # Do NOT create full session yet; only mark that step 1 passed.
             session["otp_pending"] = True
             session["otp_user"]    = env_admin_user
             session["otp_ip"]      = client_ip
@@ -229,7 +252,6 @@ def login():
 
             return render_with_error("Invalid administrative credentials.")
 
-    # Clear any stale OTP pending state when landing on login page
     session.pop("otp_pending", None)
     session.pop("otp_user", None)
     session.pop("otp_ip", None)
@@ -240,7 +262,6 @@ def login():
 @app.route("/verify-otp", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
 def verify_otp():
-    # Guard: only reachable after step 1 passes
     if not session.get("otp_pending"):
         return redirect(url_for("login"))
 
@@ -253,15 +274,13 @@ def verify_otp():
         env_admin_user = session.get("otp_user", "admin")
 
         totp      = pyotp.TOTP(env_mfa_secret)
-        otp_match = totp.verify(input_otp, valid_window=1)  # allow ±1 window (90s tolerance)
+        otp_match = totp.verify(input_otp, valid_window=1)
 
         if otp_match:
-            # ── OTP passed — clear pending flags, create full session ──
             session.pop("otp_pending", None)
             session.pop("otp_user", None)
             session.pop("otp_ip", None)
 
-            # Rebuild session cleanly (don't keep leftover pending keys)
             secure_session_destruct()
             session.permanent    = True
             session["is_admin"]  = True
@@ -281,7 +300,6 @@ def verify_otp():
             return redirect(url_for("dashboard.dashboard"))
 
         else:
-            # Wrong OTP — still count as a failure for IP tracking
             if client_ip not in IP_FAILED_ATTEMPTS:
                 IP_FAILED_ATTEMPTS[client_ip] = [1, now]
             else:
@@ -299,16 +317,141 @@ def verify_otp():
 
     return render_template("otp.html")
 
+# ======================================================================
+# VIEWER LOGIN — STEP 1: Username + Password
+# ======================================================================
 
-@app.route("/logout", methods=["POST"])
-def logout():
+@app.route("/viewer-login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+def viewer_login():
+    from database.models import User
     client_ip = get_sanitized_ip()
-    log = CameraLog(event="ADMIN_LOGOUT_REQUESTED", ip_address=client_ip)
-    db.session.add(log)
-    db.session.commit()
+    now = time.time()
 
-    secure_session_destruct()
-    return redirect(url_for("login"))
+    if client_ip in IP_FAILED_ATTEMPTS:
+        failures, lockout_time = IP_FAILED_ATTEMPTS[client_ip]
+        if failures >= 10:
+            if now - lockout_time < 300:
+                return make_response(render_template("viewer_login.html",
+                    error="IP temporarily locked out. Try again later."))
+            else:
+                IP_FAILED_ATTEMPTS[client_ip] = [0, 0]
+
+    if request.method == "POST":
+        input_user = "".join(c for c in request.form.get("username", "") if c.isalnum() or c == "_")
+        input_pass = request.form.get("password", "")
+
+        if client_ip in IP_FAILED_ATTEMPTS:
+            failures = IP_FAILED_ATTEMPTS[client_ip][0]
+            if failures > 0:
+                time.sleep(min(0.5 * failures, 10))
+
+        user = User.query.filter_by(username=input_user, role="viewer").first()
+
+        peppered_input = input_pass + PEPPER
+        password_match = (
+            user is not None
+            and bcrypt.check_password_hash(user.password, peppered_input)
+        )
+
+        if user and password_match:
+            session["viewer_otp_pending"] = True
+            session["viewer_otp_user"]    = user.username
+            session["viewer_otp_ip"]      = client_ip
+            return redirect(url_for("viewer_verify_otp"))
+        else:
+            if client_ip not in IP_FAILED_ATTEMPTS:
+                IP_FAILED_ATTEMPTS[client_ip] = [1, now]
+            else:
+                IP_FAILED_ATTEMPTS[client_ip][0] += 1
+                IP_FAILED_ATTEMPTS[client_ip][1] = now
+
+            log = CameraLog(
+                event=f"UNAUTHORIZED_VIEWER_LOGIN_ATTEMPT_USER_{input_user}",
+                ip_address=client_ip
+            )
+            db.session.add(log)
+            db.session.commit()
+
+            return make_response(render_template("viewer_login.html",
+                error="Invalid credentials."))
+
+    session.pop("viewer_otp_pending", None)
+    session.pop("viewer_otp_user", None)
+    session.pop("viewer_otp_ip", None)
+    return render_template("viewer_login.html")
+
+
+# ======================================================================
+# VIEWER LOGIN — STEP 2: OTP Verification
+# ======================================================================
+
+@app.route("/viewer-verify-otp", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+def viewer_verify_otp():
+    from database.models import User
+    if not session.get("viewer_otp_pending"):
+        return redirect(url_for("viewer_login"))
+
+    client_ip = get_sanitized_ip()
+    now = time.time()
+
+    if request.method == "POST":
+        input_otp  = request.form.get("otp", "").strip()
+        username   = session.get("viewer_otp_user")
+        user       = User.query.filter_by(username=username, role="viewer").first()
+
+        if not user or not user.otp_secret:
+            return make_response(render_template("viewer_otp.html",
+                error="Account not configured for MFA. Contact admin."))
+
+        totp      = pyotp.TOTP(user.otp_secret)
+        otp_match = totp.verify(input_otp, valid_window=1)
+
+        if otp_match:
+            session.pop("viewer_otp_pending", None)
+            session.pop("viewer_otp_user", None)
+            session.pop("viewer_otp_ip", None)
+
+            secure_session_destruct()
+            session.permanent    = True
+            session["user"]      = username
+            session["role"]      = "viewer"
+            session["user_id"]   = f"viewer_{user.id}"
+            session["login_time"]    = now
+            session["last_activity"] = now
+            session["session_token"] = secrets.token_hex(32)
+
+            app.config[f"ACTIVE_SESSION_viewer_{user.id}"] = session["session_token"]
+
+            log = CameraLog(
+                event="VIEWER_LOGIN_SUCCESSFUL",
+                username=username,
+                ip_address=client_ip
+            )
+            db.session.add(log)
+            db.session.commit()
+
+            return redirect(url_for("viewer.viewer"))
+
+        else:
+            if client_ip not in IP_FAILED_ATTEMPTS:
+                IP_FAILED_ATTEMPTS[client_ip] = [1, now]
+            else:
+                IP_FAILED_ATTEMPTS[client_ip][0] += 1
+                IP_FAILED_ATTEMPTS[client_ip][1] = now
+
+            log = CameraLog(
+                event=f"INVALID_VIEWER_OTP_ATTEMPT_USER_{username}",
+                ip_address=client_ip
+            )
+            db.session.add(log)
+            db.session.commit()
+
+            return make_response(render_template("viewer_otp.html",
+                error="Invalid or expired code."))
+
+    return render_template("viewer_otp.html")
 
 
 # ======================================================================
