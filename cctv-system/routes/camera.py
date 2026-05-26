@@ -26,19 +26,23 @@ class SecureCameraSingleton:
                 cls._instance.active_token = None
                 cls._instance.last_frame_time = 0
                 cls._instance.last_frame_checksum = None
+                cls._instance.active_username = None  # track who opened the stream
         return cls._instance
 
-    def initialize_camera(self):
+    def initialize_camera(self, username=None):
         # Control 3: Camera Index Whitelisting (Hardcoded index inside safe backend)
         # Control 10: Zero-Credential/Source Path Obfuscation
-        camera_index = int(os.environ.get('HARDWARE_CAMERA_INDEX', 0))
-        
+        # FIX: Supports both USB camera index (int) and IP camera RTSP URL (string)
+        raw_index = os.environ.get('HARDWARE_CAMERA_INDEX', '0')
+        camera_index = int(raw_index) if raw_index.isdigit() else raw_index
+
         if self.cap is None or not self.cap.isOpened():
             self.cap = cv2.VideoCapture(camera_index)
             # Control 6: Buffer Size Limit Configuration
-            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) 
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             self.is_running = True
             self.last_frame_time = time.time()
+            self.active_username = username  # store who started it
 
     def release_camera(self):
         # Control 5: Automated Resource Release Mechanism
@@ -47,6 +51,8 @@ class SecureCameraSingleton:
             self.cap = None
         self.is_running = False
         self.active_token = None
+        # Note: keep active_username so the finally-block in the generator
+        # can still log who was using the camera when it disconnected.
 
 camera_manager = SecureCameraSingleton()
 
@@ -82,18 +88,19 @@ def get_validated_client_ip():
         ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
     else:
         ip = request.remote_addr
-        
+
     cleaned_ip = "".join(c for c in ip if c.isalnum() or c in ['.', ':'])
     return cleaned_ip if cleaned_ip else "UNKNOWN_PROXIED_IP"
 
 # =====================================================================
 # HARDENING MODULE V: Network Timeout & Frame Generator Loop
 # =====================================================================
-def generate_secure_frames(validated_token):
+def generate_secure_frames(validated_token, username):
     retry_count = 0
     max_retries = 5  # Control 12: Finite Intermittent Reconnection Backoff
     fps_cap = 15     # Control 6: FPS Limit Target
     frame_delay = 1.0 / fps_cap
+    disconnect_logged = False
 
     try:
         while camera_manager.is_running:
@@ -102,7 +109,7 @@ def generate_secure_frames(validated_token):
                 break
 
             start_time = time.time()
-            
+
             # Control 4: Concurrent Access Lock utilization during frame capture
             with camera_manager._lock:
                 if camera_manager.cap is None or not camera_manager.cap.isOpened():
@@ -113,9 +120,22 @@ def generate_secure_frames(validated_token):
                 retry_count += 1
                 time.sleep(0.5 * retry_count)
                 if retry_count > max_retries:
+                    if not disconnect_logged:
+                        try:
+                            log = CameraLog(
+                                event='CAMERA_DISCONNECTED',
+                                username=username,
+                                description='Camera feed lost after max retries — device may be unplugged or turned off',
+                                ip_address='SERVER'
+                            )
+                            db.session.add(log)
+                            db.session.commit()
+                            disconnect_logged = True
+                        except Exception:
+                            db.session.rollback()
                     break
                 continue
-            
+
             retry_count = 0
 
             # Control 8: Non-Empty Frame Validation Processing
@@ -134,7 +154,7 @@ def generate_secure_frames(validated_token):
             ret, buffer = cv2.imencode('.jpg', frame)
             if not ret:
                 continue
-                
+
             frame_bytes = buffer.tobytes()
 
             # Control 6: Frame Rate Overload Throttling
@@ -147,11 +167,24 @@ def generate_secure_frames(validated_token):
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
     # Control 17: Fail-Closed Error Boundary Pattern
-    except Exception as e:
+    except Exception:
         pass
     finally:
         with camera_manager._lock:
             camera_manager.release_camera()
+        # Log stream exit — always capture who was using it
+        if not disconnect_logged:
+            try:
+                log = CameraLog(
+                    event='CAMERA_STREAM_STOPPED',
+                    username=username,
+                    description=f'Stream ended — camera released by {username or "system"}',
+                    ip_address='SERVER'
+                )
+                db.session.add(log)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
 
 # =====================================================================
 # CORE SECURED ROUTE ENDPOINTS
@@ -172,18 +205,26 @@ def secure_video_feed():
         return abort(403, description="Forbidden: Invalid or Expired Stream Token")
 
     client_ip = get_validated_client_ip()
+    username  = session.get('user', 'unknown')
 
-    # Control 11: Append-Only Audit Logging
-    log = CameraLog(event='SECURE_STREAM_STARTED', ip_address=client_ip)
+    # Control 11: Append-Only Audit Logging — now includes who started the stream
+    log = CameraLog(
+        event='CAMERA_STREAM_STARTED',
+        username=username,
+        description=f'Live stream opened by {username}',
+        ip_address=client_ip
+    )
     db.session.add(log)
     db.session.commit()
 
-    # Control 4: Initialize camera
+    # Control 4: Initialize camera, pass username for disconnect logging
     with camera_manager._lock:
-        camera_manager.initialize_camera()
+        camera_manager.initialize_camera(username=username)
 
-    response = Response(generate_secure_frames(token_param), 
-                        mimetype='multipart/x-mixed-replace; boundary=frame')
+    response = Response(
+        generate_secure_frames(token_param, username),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
 
     # Control 11: Aggressive Browser Cache Disabling
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"

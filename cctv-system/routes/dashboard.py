@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, abort
-from database.models import db, LoginLog, CameraLog, AlertLog, ActivityLog
+from database.models import db, LoginLog, CameraLog, AlertLog, ActivityLog, BlockedIP
 from functools import wraps
 from datetime import datetime, date
 from sqlalchemy import func
@@ -41,13 +41,11 @@ def dashboard():
         LoginLog.status == 'failed'
     ).count()
 
-    # Blocked IPs = unique IPs with 3+ failed logins today
-    blocked_ips_query = db.session.query(LoginLog.ip_address).filter(
-        LoginLog.timestamp >= today_start,
-        LoginLog.status == 'failed'
-    ).group_by(LoginLog.ip_address).having(func.count(LoginLog.ip_address) >= 3).all()
-    blocked_ips_count = len(blocked_ips_query)
-    blocked_ips_list = [row[0] for row in blocked_ips_query]
+    # ── Blocked IPs (from BlockedIP table) ────────────────────────────
+    blocked_ips_db    = BlockedIP.query.order_by(BlockedIP.blocked_at.desc()).all()
+    blocked_ips_count = len(blocked_ips_db)
+    blocked_ips_list  = [entry.ip_address for entry in blocked_ips_db]
+    blocked_ips_set   = set(blocked_ips_list)   # for O(1) lookup in the logs table
 
     # Active sessions = unique users with successful login today
     active_sessions = db.session.query(LoginLog.username).filter(
@@ -58,7 +56,9 @@ def dashboard():
     # Active cameras
     active_cameras = 0
     latest_cam = CameraLog.query.order_by(CameraLog.timestamp.desc()).first()
-    if latest_cam and latest_cam.event in ['started', 'SECURE_STREAM_STARTED', 'STREAM_STARTED']:
+    if latest_cam and latest_cam.event in [
+        'started', 'SECURE_STREAM_STARTED', 'STREAM_STARTED', 'CAMERA_STREAM_STARTED'
+    ]:
         active_cameras = 1
 
     # AI Alerts today
@@ -79,7 +79,7 @@ def dashboard():
     activity_logs = ActivityLog.query.order_by(ActivityLog.timestamp.desc()).limit(50).all()
 
     # Login logs and camera logs
-    login_logs = LoginLog.query.order_by(LoginLog.timestamp.desc()).limit(50).all()
+    login_logs  = LoginLog.query.order_by(LoginLog.timestamp.desc()).limit(50).all()
     camera_logs = CameraLog.query.order_by(CameraLog.timestamp.desc()).limit(20).all()
 
     register_error   = request.args.get("register_error")
@@ -97,6 +97,8 @@ def dashboard():
                            failed_logins_today=failed_logins_today,
                            blocked_ips_count=blocked_ips_count,
                            blocked_ips_list=blocked_ips_list,
+                           blocked_ips_set=blocked_ips_set,
+                           blocked_ips_db=blocked_ips_db,
                            active_sessions=active_sessions,
                            active_cameras=active_cameras,
                            alerts_today=alerts_today,

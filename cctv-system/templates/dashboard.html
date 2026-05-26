@@ -355,11 +355,142 @@
             font-weight: 600;
         }
 
+        /* Block IP button (inline in table) */
+        .btn-block-ip {
+            background: #ffe9e9;
+            color: #c62828;
+            border: 1.5px solid #fbb;
+            border-radius: 20px;
+            padding: 0.22rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-block-ip:hover {
+            background: #c62828;
+            color: white;
+            border-color: #c62828;
+        }
+
+        .btn-block-ip:disabled {
+            background: #f5f5f5;
+            color: #aaa;
+            border-color: #ddd;
+            cursor: default;
+        }
+
+        .already-blocked-tag {
+            background: #f5f5f5;
+            color: #999;
+            border-radius: 20px;
+            padding: 0.22rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Unblock button (in settings) */
+        .btn-unblock-ip {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1.5px solid #b2dfdb;
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-unblock-ip:hover {
+            background: #2e7d32;
+            color: white;
+            border-color: #2e7d32;
+        }
+
         /* Settings */
         .settings-placeholder {
             text-align: center;
             padding: 4rem 2rem;
             color: #5a6e5a;
+        }
+
+        /* Blocked IPs settings card */
+        .blocked-ips-card {
+            max-width: 600px;
+            margin: 0 auto 2rem auto;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #fdd;
+            box-shadow: 0 2px 8px rgba(198,40,40,0.05);
+            overflow: hidden;
+        }
+
+        .blocked-ips-card-header {
+            background: #fff5f5;
+            padding: 1rem 1.4rem;
+            border-bottom: 1px solid #fdd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .blocked-ips-card-header h3 {
+            color: #c62828;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .blocked-count-badge {
+            background: #c62828;
+            color: white;
+            border-radius: 20px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .blocked-count-badge.zero {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .blocked-ip-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.4rem;
+            border-bottom: 1px solid #fef5f5;
+            font-size: 0.88rem;
+        }
+
+        .blocked-ip-row:last-child { border-bottom: none; }
+
+        .blocked-ip-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .blocked-ip-addr {
+            font-weight: 600;
+            color: #c62828;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .blocked-ip-meta {
+            font-size: 0.75rem;
+            color: #9a7a7a;
+        }
+
+        .no-blocked-msg {
+            padding: 1.5rem;
+            text-align: center;
+            color: #7a8a7a;
+            font-size: 0.85rem;
         }
 
         /* Footer */
@@ -425,6 +556,36 @@
         .modal-confirm:hover { background: #b71c1c; }
         .modal-cancel { background: #eef5ee; color: #2c5e2c; border: 1.5px solid #cfdfcf; }
         .modal-cancel:hover { background: #dff0df; }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #1e3a1e;
+            color: white;
+            padding: 0.75rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 2000;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #c62828;
+        }
     </style>
 </head>
 <body>
@@ -460,7 +621,7 @@
     <!-- Content -->
     <div class="content-area">
 
-        <!-- LIVE PANEL -->
+        <!-- ==================== LIVE PANEL ==================== -->
         <div id="livePanel">
 
             <!-- Main Live Feed -->
@@ -476,7 +637,7 @@
                      alt="Live Feed">
             </div>
 
-            <!-- Stats Row — REAL DATA from Flask -->
+            <!-- Stats Row -->
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-value">{{ active_cameras }}</div>
@@ -583,7 +744,7 @@
             </div>
         </div>
 
-        <!-- LOGS PANEL -->
+        <!-- ==================== LOGS PANEL ==================== -->
         <div id="logsPanel" style="display:none;">
 
             <!-- Login Logs -->
@@ -596,15 +757,20 @@
                             <th style="padding:0.75rem 1rem; text-align:left;">Username</th>
                             <th style="padding:0.75rem 1rem; text-align:left;">IP Address</th>
                             <th style="padding:0.75rem 1rem; text-align:left;">Status</th>
-                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;">Timestamp</th>
+                            <th style="padding:0.75rem 1rem; text-align:left;">Timestamp</th>
+                            {% if session.get('role') == 'admin' %}
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;">Action</th>
+                            {% else %}
+                            <th style="padding:0.75rem 1rem; text-align:left; border-radius:0 12px 0 0;"></th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for log in login_logs %}
-                        <tr style="border-bottom:1px solid #eef3ee;">
+                        <tr style="border-bottom:1px solid #eef3ee; {% if log.status == 'failed' %}background:#fffafa;{% endif %}">
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
                             <td style="padding:0.7rem 1rem; font-weight:500; color:#1e3a1e;">{{ log.username }}</td>
-                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ log.ip_address }}</td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a; font-family:monospace;">{{ log.ip_address }}</td>
                             <td style="padding:0.7rem 1rem;">
                                 {% if log.status == 'success' %}
                                     <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
@@ -617,10 +783,22 @@
                                 {% endif %}
                             </td>
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td style="padding:0.7rem 1rem;">
+                                {% if session.get('role') == 'admin' and log.status == 'failed' %}
+                                    {% if log.ip_address in blocked_ips_set %}
+                                        <span class="already-blocked-tag"><i class="fas fa-ban"></i> Blocked</span>
+                                    {% else %}
+                                        <button class="btn-block-ip"
+                                                onclick="confirmBlockIP('{{ log.ip_address }}', this)">
+                                            <i class="fas fa-ban"></i> Block IP
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No login logs yet.</td>
+                            <td colspan="6" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No login logs yet.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -648,7 +826,7 @@
                                     <i class="fas fa-circle" style="font-size:0.5rem;"></i> {{ log.event | capitalize }}
                                 </span>
                             </td>
-                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ log.ip_address }}</td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a; font-family:monospace;">{{ log.ip_address }}</td>
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         </tr>
                         {% else %}
@@ -692,7 +870,7 @@
                                 {% endif %}
                             </td>
                             <td style="padding:0.7rem 1rem; color:#4a6a4a; font-size:0.82rem;">{{ log.description or '—' }}</td>
-                            <td style="padding:0.7rem 1rem; color:#4a6a4a;">{{ log.ip_address }}</td>
+                            <td style="padding:0.7rem 1rem; color:#4a6a4a; font-family:monospace;">{{ log.ip_address }}</td>
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         </tr>
                         {% else %}
@@ -744,7 +922,7 @@
             </div>
         </div>
 
-        <!-- SETTINGS PANEL -->
+        <!-- ==================== SETTINGS PANEL ==================== -->
         <div id="settingsPanel" style="display:none;">
             <div class="settings-placeholder">
                 <i class="fas fa-cog" style="font-size:3rem; color:#bdd4bd; margin-bottom:1rem; display:inline-block;"></i>
@@ -754,6 +932,42 @@
                     <i class="fas fa-lock"></i> Admin role: Full control • 2FA ready
                 </div>
             </div>
+
+            <!-- ── BLOCKED IPs MANAGEMENT (admin only) ── -->
+            {% if session.get('role') == 'admin' %}
+            <div class="blocked-ips-card">
+                <div class="blocked-ips-card-header">
+                    <h3><i class="fas fa-ban" style="margin-right:8px;"></i>Blocked IP Addresses</h3>
+                    <span class="blocked-count-badge {% if blocked_ips_count == 0 %}zero{% endif %}">
+                        {{ blocked_ips_count }} blocked
+                    </span>
+                </div>
+
+                {% if blocked_ips_db %}
+                    {% for entry in blocked_ips_db %}
+                    <div class="blocked-ip-row" id="blocked-row-{{ loop.index }}">
+                        <div class="blocked-ip-info">
+                            <span class="blocked-ip-addr"><i class="fas fa-ban" style="font-size:0.7rem; margin-right:4px; opacity:0.6;"></i>{{ entry.ip_address }}</span>
+                            <span class="blocked-ip-meta">
+                                Blocked by {{ entry.blocked_by or 'system' }}
+                                • {{ entry.blocked_at.strftime('%Y-%m-%d %H:%M') if entry.blocked_at else 'unknown time' }}
+                                {% if entry.reason %} • {{ entry.reason }}{% endif %}
+                            </span>
+                        </div>
+                        <button class="btn-unblock-ip"
+                                onclick="unblockIP('{{ entry.ip_address }}', {{ loop.index }}, this)">
+                            <i class="fas fa-unlock-alt"></i> Unblock
+                        </button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-blocked-msg">
+                        <i class="fas fa-check-circle" style="color:#2e7d32; margin-right:6px;"></i>
+                        No IPs are currently blocked.
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Register new user — admin only -->
             {% if session.get('role') == 'admin' %}
@@ -803,7 +1017,7 @@
     </div>
 </div>
 
-<!-- LOGOUT CONFIRMATION MODAL -->
+<!-- ── LOGOUT CONFIRMATION MODAL ── -->
 <div id="logoutModal" class="modal-overlay">
     <div class="confirm-modal">
         <i class="fas fa-question-circle"></i>
@@ -819,18 +1033,36 @@
     </div>
 </div>
 
+<!-- ── BLOCK IP CONFIRMATION MODAL ── -->
+<div id="blockIPModal" class="modal-overlay">
+    <div class="confirm-modal">
+        <i class="fas fa-ban" style="color:#c62828;"></i>
+        <h3>Block this IP?</h3>
+        <p>You are about to block <strong id="blockIPTarget" style="font-family:monospace; color:#c62828;"></strong>. This IP will be denied access immediately.</p>
+        <div class="modal-buttons">
+            <button id="modalConfirmBlock" class="modal-btn modal-confirm">
+                <i class="fas fa-ban"></i> Yes, Block
+            </button>
+            <button id="modalCancelBlock" class="modal-btn modal-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="toast"></div>
+
 <script>
-    // Tab switching
-    const liveViewTab = document.getElementById('liveViewTab');
-    const logsTab = document.getElementById('logsTab');
-    const settingsTab = document.getElementById('settingsTab');
-    const livePanel = document.getElementById('livePanel');
-    const logsPanel = document.getElementById('logsPanel');
+    // ── Tab switching ──
+    const liveViewTab   = document.getElementById('liveViewTab');
+    const logsTab       = document.getElementById('logsTab');
+    const settingsTab   = document.getElementById('settingsTab');
+    const livePanel     = document.getElementById('livePanel');
+    const logsPanel     = document.getElementById('logsPanel');
     const settingsPanel = document.getElementById('settingsPanel');
 
     function setActiveTab(tabName) {
-        livePanel.style.display = 'none';
-        logsPanel.style.display = 'none';
+        livePanel.style.display     = 'none';
+        logsPanel.style.display     = 'none';
         settingsPanel.style.display = 'none';
         liveViewTab.classList.remove('active');
         logsTab.classList.remove('active');
@@ -848,28 +1080,155 @@
         }
     }
 
-    liveViewTab.addEventListener('click', () => setActiveTab('live'));
-    logsTab.addEventListener('click', () => setActiveTab('logs'));
-    settingsTab.addEventListener('click', () => setActiveTab('settings'));
+    liveViewTab.addEventListener('click',  () => setActiveTab('live'));
+    logsTab.addEventListener('click',      () => setActiveTab('logs'));
+    settingsTab.addEventListener('click',  () => setActiveTab('settings'));
 
-    // Logout modal
-    const logoutModal = document.getElementById('logoutModal');
+    // ── Logout modal ──
+    const logoutModal  = document.getElementById('logoutModal');
     const logoutButton = document.getElementById('logoutButton');
     const modalConfirm = document.getElementById('modalConfirmLogout');
-    const modalCancel = document.getElementById('modalCancelLogout');
+    const modalCancel  = document.getElementById('modalCancelLogout');
 
     logoutButton.addEventListener('click', () => logoutModal.classList.add('active'));
-    modalCancel.addEventListener('click', () => logoutModal.classList.remove('active'));
+    modalCancel.addEventListener('click',  () => logoutModal.classList.remove('active'));
     logoutModal.addEventListener('click', (e) => {
         if (e.target === logoutModal) logoutModal.classList.remove('active');
     });
-
-    // Confirm logout → submits POST form with CSRF token
     modalConfirm.addEventListener('click', () => {
         document.getElementById('logoutForm').submit();
     });
 
-    // Recording hours counter (cosmetic)
+    // ── Toast helper ──
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.innerHTML = (isError ? '<i class="fas fa-exclamation-circle"></i> ' : '<i class="fas fa-check-circle"></i> ') + msg;
+        toast.className = 'toast' + (isError ? ' error' : '');
+        // force reflow so transition triggers
+        void toast.offsetWidth;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ── Block IP modal ──
+    const blockIPModal        = document.getElementById('blockIPModal');
+    const blockIPTarget       = document.getElementById('blockIPTarget');
+    const modalConfirmBlock   = document.getElementById('modalConfirmBlock');
+    const modalCancelBlock    = document.getElementById('modalCancelBlock');
+
+    let _pendingBlockIP  = null;
+    let _pendingBlockBtn = null;
+
+    function confirmBlockIP(ip, btn) {
+        _pendingBlockIP  = ip;
+        _pendingBlockBtn = btn;
+        blockIPTarget.textContent = ip;
+        blockIPModal.classList.add('active');
+    }
+
+    modalCancelBlock.addEventListener('click', () => {
+        blockIPModal.classList.remove('active');
+        _pendingBlockIP  = null;
+        _pendingBlockBtn = null;
+    });
+
+    blockIPModal.addEventListener('click', (e) => {
+        if (e.target === blockIPModal) {
+            blockIPModal.classList.remove('active');
+            _pendingBlockIP  = null;
+            _pendingBlockBtn = null;
+        }
+    });
+
+    modalConfirmBlock.addEventListener('click', async () => {
+        if (!_pendingBlockIP) return;
+
+        blockIPModal.classList.remove('active');
+        const ip  = _pendingBlockIP;
+        const btn = _pendingBlockBtn;
+        _pendingBlockIP  = null;
+        _pendingBlockBtn = null;
+
+        // Optimistic UI — disable button immediately
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+
+        try {
+            const resp = await fetch('/blocked/block', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                body: JSON.stringify({ ip_address: ip })
+            });
+            const data = await resp.json();
+
+            if (resp.ok && data.success) {
+                showToast('IP ' + ip + ' has been blocked.');
+                // Replace button with "Blocked" tag
+                if (btn) {
+                    const tag = document.createElement('span');
+                    tag.className = 'already-blocked-tag';
+                    tag.innerHTML = '<i class="fas fa-ban"></i> Blocked';
+                    btn.replaceWith(tag);
+                }
+            } else {
+                showToast(data.message || 'Failed to block IP.', true);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-ban"></i> Block IP';
+                }
+            }
+        } catch (err) {
+            showToast('Network error. Please try again.', true);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-ban"></i> Block IP';
+            }
+        }
+    });
+
+    // ── Unblock IP ──
+    async function unblockIP(ip, rowIndex, btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const resp = await fetch('/blocked/unblock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                body: JSON.stringify({ ip_address: ip })
+            });
+            const data = await resp.json();
+
+            if (resp.ok && data.success) {
+                showToast('IP ' + ip + ' has been unblocked.');
+                const row = document.getElementById('blocked-row-' + rowIndex);
+                if (row) {
+                    row.style.transition = 'opacity 0.3s';
+                    row.style.opacity = '0';
+                    setTimeout(() => row.remove(), 300);
+                }
+            } else {
+                showToast(data.message || 'Failed to unblock IP.', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Unblock';
+            }
+        } catch (err) {
+            showToast('Network error. Please try again.', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Unblock';
+        }
+    }
+
+    // ── CSRF helper ──
+    function getCsrfToken() {
+        // Grab from any existing hidden CSRF input on the page
+        const el = document.querySelector('input[name="csrf_token"]');
+        return el ? el.value : '';
+    }
+
+    // ── Recording hours counter (cosmetic) ──
     function updateStatsPeriodically() {
         const recordingSpan = document.getElementById('recordingHours');
         setInterval(() => {

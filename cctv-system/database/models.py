@@ -22,7 +22,9 @@ class LoginLog(db.Model):
 class CameraLog(db.Model):
     __tablename__ = 'camera_logs'
     id = db.Column(db.Integer, primary_key=True)
-    event = db.Column(db.String(50), nullable=False)  # 'started' or 'stopped'
+    event = db.Column(db.String(100), nullable=False)   # widened to 100 for longer event names
+    username = db.Column(db.String(100), nullable=True) # who triggered the event (None = system)
+    description = db.Column(db.String(255), nullable=True)  # human-readable detail
     ip_address = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -42,3 +44,12 @@ class ActivityLog(db.Model):
     ip_address = db.Column(db.String(50), nullable=False)
     severity = db.Column(db.String(20), default='info')  # 'info' or 'suspicious'
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ── NEW: Persistent IP block list ─────────────────────────────────────
+class BlockedIP(db.Model):
+    __tablename__ = 'blocked_ips'
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(50), unique=True, nullable=False)
+    blocked_by = db.Column(db.String(100), nullable=True)   # admin username who blocked it
+    reason = db.Column(db.String(255), nullable=True)       # optional reason / auto-filled
+    blocked_at = db.Column(db.DateTime, default=datetime.utcnow)
