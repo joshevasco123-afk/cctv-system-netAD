@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for, current_app
 from functools import wraps
 import time
 import secrets
@@ -10,8 +10,6 @@ def viewer_login_required(f):
     def decorated(*args, **kwargs):
         if not session.get("user") or session.get("role") != "viewer":
             return redirect(url_for("viewer_login"))
-
-        from app import app
 
         now = time.time()
 
@@ -28,7 +26,7 @@ def viewer_login_required(f):
             return redirect(url_for("viewer_login"))
 
         # Single session token enforcement
-        active_token = app.config.get(f"ACTIVE_SESSION_{session.get('user_id')}")
+        active_token = current_app.config.get(f"ACTIVE_SESSION_{session.get('user_id')}")
         if session.get("session_token") != active_token:
             session.clear()
             return redirect(url_for("viewer_login"))

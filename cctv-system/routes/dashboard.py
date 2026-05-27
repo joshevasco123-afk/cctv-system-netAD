@@ -48,10 +48,12 @@ def dashboard():
     blocked_ips_set   = set(blocked_ips_list)   # for O(1) lookup in the logs table
 
     # Active sessions = unique users with successful login today
-    active_sessions = db.session.query(LoginLog.username).filter(
-        LoginLog.timestamp >= today_start,
-        LoginLog.status == 'success'
-    ).distinct().count()
+    from flask import current_app
+    active_sessions = sum(
+    1 for key in current_app.config
+    if key.startswith("ACTIVE_SESSION_")
+    and current_app.config[key] is not None
+)
 
     # Active cameras
     active_cameras = 0
