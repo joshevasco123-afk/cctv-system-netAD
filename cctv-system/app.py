@@ -3,7 +3,7 @@ from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
-from database.models import db, CameraLog
+from database.models import db, CameraLog, LoginLog
 from config import Config
 from functools import wraps
 from datetime import timedelta
@@ -250,6 +250,10 @@ def login():
             db.session.add(log)
             db.session.commit()
 
+            log = LoginLog(username=input_user, ip_address=client_ip, status='failed')
+            db.session.add(log)
+            db.session.commit()
+
             return render_with_error("Invalid administrative credentials.")
 
     session.pop("otp_pending", None)
@@ -294,6 +298,10 @@ def verify_otp():
             app.config["ACTIVE_SESSION_admin_01"] = session["session_token"]
 
             log = CameraLog(event="ADMIN_LOGIN_SUCCESSFUL", ip_address=client_ip)
+            db.session.add(log)
+            db.session.commit()
+
+            log = LoginLog(username=env_admin_user, ip_address=client_ip, status='success')
             db.session.add(log)
             db.session.commit()
 
@@ -373,6 +381,10 @@ def viewer_login():
             db.session.add(log)
             db.session.commit()
 
+            log = LoginLog(username=input_user, ip_address=client_ip, status='failed')
+            db.session.add(log)
+            db.session.commit()
+
             return make_response(render_template("viewer_login.html",
                 error="Invalid credentials."))
 
@@ -429,6 +441,10 @@ def viewer_verify_otp():
                 username=username,
                 ip_address=client_ip
             )
+            db.session.add(log)
+            db.session.commit()
+
+            log = LoginLog(username=username, ip_address=client_ip, status='success')
             db.session.add(log)
             db.session.commit()
 
