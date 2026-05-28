@@ -32,12 +32,18 @@ class SecureCameraSingleton:
     def initialize_camera(self, username=None):
         # Control 3: Camera Index Whitelisting (Hardcoded index inside safe backend)
         # Control 10: Zero-Credential/Source Path Obfuscation
-        # FIX: Supports both USB camera index (int) and IP camera RTSP URL (string)
+        # FIX: Supports both USB camera index (int) and IP camera RTSP/HTTP URL (string)
         raw_index = os.environ.get('HARDWARE_CAMERA_INDEX', '0')
         camera_index = int(raw_index) if raw_index.isdigit() else raw_index
 
+        # FIX: Add ngrok browser warning bypass for HTTP streams
+        if isinstance(camera_index, str) and camera_index.startswith('http'):
+            stream_url = camera_index + ("&" if "?" in camera_index else "?") + "ngrok-skip-browser-warning=true"
+        else:
+            stream_url = camera_index
+
         if self.cap is None or not self.cap.isOpened():
-            self.cap = cv2.VideoCapture(camera_index)
+            self.cap = cv2.VideoCapture(stream_url)
             # Control 6: Buffer Size Limit Configuration
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             self.is_running = True
