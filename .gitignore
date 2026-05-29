@@ -427,3 +427,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# NETAD local-only files — never push to git
+webcam_stream.py
