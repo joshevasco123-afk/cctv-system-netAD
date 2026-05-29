@@ -20,7 +20,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 app.config.setdefault("PERMANENT_SESSION_LIFETIME", timedelta(minutes=30))
-
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 app.config.setdefault("SQLALCHEMY_DATABASE_URI", os.environ.get("DATABASE_URL", "sqlite:///cctv.db"))
 app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
@@ -38,6 +37,10 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 csrf = CSRFProtect(app)
 
+# ── Exempt /push_frame from CSRF — it's a machine-to-machine POST ─────
+# authenticated by X-Push-Secret header instead
+csrf.exempt("routes.camera.push_frame")
+
 # ─── Rate Limiter ─────────────────────────────────────────────────────
 limiter = Limiter(
     get_remote_address,
@@ -46,7 +49,7 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-# ─── In-memory IP failure tracking ───────────────────────────────────
+# ─── In-memory IP failure tracking ────────────────────────────────────
 IP_FAILED_ATTEMPTS = {}
 
 
@@ -178,7 +181,6 @@ def logout():
     log = CameraLog(event="ADMIN_LOGOUT_REQUESTED", ip_address=client_ip)
     db.session.add(log)
     db.session.commit()
-
     secure_session_destruct()
     return redirect(url_for("login"))
 
@@ -193,9 +195,9 @@ def viewer_logout():
     )
     db.session.add(log)
     db.session.commit()
-
     secure_session_destruct()
     return redirect(url_for("viewer_login"))
+
 
 # ── STEP 1: Username + Password ───────────────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
@@ -204,7 +206,6 @@ def login():
     client_ip = get_sanitized_ip()
     now = time.time()
 
-    # ── Block check ───────────────────────────────────────────────────
     if is_ip_blocked(client_ip):
         return render_with_error("Access denied. Your IP has been blocked by the administrator.")
 
@@ -244,7 +245,6 @@ def login():
             session["otp_user"]    = env_admin_user
             session["otp_ip"]      = client_ip
             return redirect(url_for("verify_otp"))
-
         else:
             if client_ip not in IP_FAILED_ATTEMPTS:
                 IP_FAILED_ATTEMPTS[client_ip] = [1, now]
@@ -315,7 +315,6 @@ def verify_otp():
             db.session.commit()
 
             return redirect(url_for("dashboard.dashboard"))
-
         else:
             if client_ip not in IP_FAILED_ATTEMPTS:
                 IP_FAILED_ATTEMPTS[client_ip] = [1, now]
@@ -334,6 +333,7 @@ def verify_otp():
 
     return render_template("otp.html")
 
+
 # ======================================================================
 # VIEWER LOGIN — STEP 1: Username + Password
 # ======================================================================
@@ -345,7 +345,6 @@ def viewer_login():
     client_ip = get_sanitized_ip()
     now = time.time()
 
-    # ── Block check ───────────────────────────────────────────────────
     if is_ip_blocked(client_ip):
         return make_response(render_template("viewer_login.html",
             error="Access denied. Your IP has been blocked by the administrator."))
@@ -463,7 +462,6 @@ def viewer_verify_otp():
             db.session.commit()
 
             return redirect(url_for("viewer.viewer"))
-
         else:
             if client_ip not in IP_FAILED_ATTEMPTS:
                 IP_FAILED_ATTEMPTS[client_ip] = [1, now]
