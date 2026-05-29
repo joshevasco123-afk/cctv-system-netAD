@@ -1241,7 +1241,24 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         updateStatsPeriodically();
+        initLiveFeed();
     });
+
+    async function initLiveFeed() {
+    try {
+        const resp = await fetch('/request_stream_token', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        });
+        const data = await resp.json();
+        if (data.stream_token) {
+            const img = document.getElementById('liveFeedImg');
+            img.src = '/video_feed?token=' + data.stream_token;
+        }
+    } catch (err) {
+        console.error('Failed to init stream:', err);
+    }
+}
 </script>
 </body>
 </html>
