@@ -41,6 +41,11 @@ class FrameStore:
 
 frame_store = FrameStore()
 
+# ── Rate-limit state for /viewer_frame (max 1 response/sec) ──
+_viewer_frame_lock      = threading.Lock()
+_last_viewer_frame_time = 0.0
+_cached_viewer_response = None   # (encoded_str, seq)
+
 
 def secure_admin_required(f):
     @wraps(f)
@@ -169,6 +174,8 @@ def secure_video_feed():
 
 @camera_bp.route('/viewer_frame')
 def viewer_frame():
+    global _last_viewer_frame_time, _cached_viewer_response
+
     # Allow both admin and viewer sessions
     is_admin  = session.get('is_admin') and session.get('user_id')
     is_viewer = session.get('user') and session.get('role') == 'viewer'
@@ -176,10 +183,21 @@ def viewer_frame():
     if not is_admin and not is_viewer:
         return jsonify({'error': 'unauthorized'}), 403
 
-    frame_bytes, seq = frame_store.get_frame_and_seq()
+    now = time.time()
 
-    if frame_bytes is None or not frame_store.is_fresh(stale_after=10):
-        return jsonify({'ok': False, 'available': False}), 200
+    with _viewer_frame_lock:
+        # If called faster than 1/sec, return cached response
+        if now - _last_viewer_frame_time < 1.0 and _cached_viewer_response is not None:
+            encoded, seq = _cached_viewer_response
+            return jsonify({'ok': True, 'available': True, 'frame': encoded, 'seq': seq}), 200
 
-    encoded = base64.b64encode(frame_bytes).decode('utf-8')
+        frame_bytes, seq = frame_store.get_frame_and_seq()
+
+        if frame_bytes is None or not frame_store.is_fresh(stale_after=10):
+            return jsonify({'ok': False, 'available': False}), 200
+
+        encoded = base64.b64encode(frame_bytes).decode('utf-8')
+        _last_viewer_frame_time = now
+        _cached_viewer_response = (encoded, seq)
+
     return jsonify({'ok': True, 'available': True, 'frame': encoded, 'seq': seq}), 200
