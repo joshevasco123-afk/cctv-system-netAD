@@ -10,10 +10,6 @@ from datetime import datetime
 
 camera_bp = Blueprint('camera', __name__)
 
-# =====================================================================
-# FRAME STORE — Railway just holds the latest pushed frame in memory
-# No cv2, no VideoCapture, no long-lived connections to external streams
-# =====================================================================
 class FrameStore:
     _instance = None
     _lock = threading.Lock()
@@ -22,8 +18,8 @@ class FrameStore:
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
-                cls._instance.latest_frame  = None   # raw JPEG bytes
-                cls._instance.frame_seq     = 0       # increments each push
+                cls._instance.latest_frame  = None
+                cls._instance.frame_seq     = 0
                 cls._instance.frame_lock    = threading.Lock()
                 cls._instance.last_push_at  = 0
                 cls._instance.active_token  = None
@@ -40,16 +36,12 @@ class FrameStore:
             return self.latest_frame, self.frame_seq
 
     def is_fresh(self, stale_after=5):
-        """Returns True if a frame was pushed within the last N seconds."""
         return (time.time() - self.last_push_at) < stale_after
 
 
 frame_store = FrameStore()
 
 
-# =====================================================================
-# HARDENING MODULE I & VII: Auth & Session Decorators
-# =====================================================================
 def secure_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -69,9 +61,6 @@ def secure_admin_required(f):
     return decorated_function
 
 
-# =====================================================================
-# HARDENING MODULE XIII: Reverse Proxy Client-IP Validation
-# =====================================================================
 def get_validated_client_ip():
     if request.headers.get('X-Forwarded-For'):
         ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
@@ -81,15 +70,8 @@ def get_validated_client_ip():
     return cleaned_ip if cleaned_ip else "UNKNOWN_PROXIED_IP"
 
 
-# =====================================================================
-# PUSH ENDPOINT — classmate's laptop posts JPEG frames here
-# =====================================================================
 @camera_bp.route('/push_frame', methods=['POST'])
 def push_frame():
-    """
-    Receives a raw JPEG POST from the laptop pusher script.
-    Authenticated by X-Push-Secret header (set as PUSH_SECRET env var).
-    """
     expected_secret = os.environ.get('PUSH_SECRET', '')
     incoming_secret = request.headers.get('X-Push-Secret', '')
 
@@ -104,17 +86,13 @@ def push_frame():
     return jsonify({'ok': True, 'seq': frame_store.frame_seq}), 200
 
 
-# =====================================================================
-# ADMIN MJPEG STREAM — reads from frame store, sequence-number driven
-# =====================================================================
 def generate_secure_frames(validated_token, username):
-    last_seq         = -1
-    no_frame_timeout = 15    # seconds with no push before giving up
+    last_seq          = -1
+    no_frame_timeout  = 15
     disconnect_logged = False
 
     try:
         while True:
-            # Control 2: token check
             if frame_store.active_token != validated_token:
                 break
 
@@ -127,7 +105,6 @@ def generate_secure_frames(validated_token, username):
                 continue
 
             last_seq = current_seq
-
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
@@ -148,9 +125,6 @@ def generate_secure_frames(validated_token, username):
                 db.session.rollback()
 
 
-# =====================================================================
-# CORE SECURED ROUTE ENDPOINTS
-# =====================================================================
 @camera_bp.route('/request_stream_token', methods=['POST'])
 @secure_admin_required
 def request_stream_token():
@@ -193,18 +167,19 @@ def secure_video_feed():
     return response
 
 
-# =====================================================================
-# VIEWER FRAME ENDPOINT — polls latest frame from frame store
-# =====================================================================
 @camera_bp.route('/viewer_frame')
 def viewer_frame():
-    if not session.get('user') or session.get('role') != 'viewer':
+    # Allow both admin and viewer sessions
+    is_admin  = session.get('is_admin') and session.get('user_id')
+    is_viewer = session.get('user') and session.get('role') == 'viewer'
+
+    if not is_admin and not is_viewer:
         return jsonify({'error': 'unauthorized'}), 403
 
-    frame_bytes, _ = frame_store.get_frame_and_seq()
+    frame_bytes, seq = frame_store.get_frame_and_seq()
 
     if frame_bytes is None or not frame_store.is_fresh(stale_after=10):
-        return jsonify({'available': False}), 200
+        return jsonify({'ok': False, 'available': False}), 200
 
     encoded = base64.b64encode(frame_bytes).decode('utf-8')
-    return jsonify({'available': True, 'frame': encoded}), 200
+    return jsonify({'ok': True, 'available': True, 'frame': encoded, 'seq': seq}), 200
