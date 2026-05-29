@@ -26,21 +26,25 @@ class SecureCameraSingleton:
                 cls._instance.is_running = False
                 cls._instance.active_token = None
                 cls._instance.last_frame_time = 0
-                cls._instance.last_frame_checksum = None
                 cls._instance.active_username = None
 
                 # ── Frame Buffer ──────────────────────────────────────
-                cls._instance.latest_frame = None       # latest JPEG bytes
-                cls._instance.frame_lock = threading.Lock()
-                cls._instance.frame_event = threading.Event()  # signals a NEW frame is ready
-                cls._instance._buffer_thread = None
+                # latest_frame  : raw JPEG bytes of the most recent frame
+                # frame_seq     : counter incremented every time a new frame arrives
+                # frame_lock    : protects latest_frame + frame_seq reads/writes
+                cls._instance.latest_frame = None
+                cls._instance.frame_seq    = 0
+                cls._instance.frame_lock   = threading.Lock()
+
+                # buffer thread state
+                cls._instance._buffer_thread  = None
                 cls._instance._buffer_running = False
         return cls._instance
 
     # ------------------------------------------------------------------
     def initialize_camera(self, username=None):
         # Control 3 / 10: Camera Index Whitelisting & Source Path Obfuscation
-        raw_index = os.environ.get('HARDWARE_CAMERA_INDEX', '0')
+        raw_index  = os.environ.get('HARDWARE_CAMERA_INDEX', '0')
         camera_index = int(raw_index) if raw_index.isdigit() else raw_index
 
         if isinstance(camera_index, str) and camera_index.startswith('http'):
@@ -56,24 +60,24 @@ class SecureCameraSingleton:
             else:
                 self.cap = cv2.VideoCapture(stream_url)
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)   # Control 6
-            self.is_running = True
+            self.is_running   = True
             self.last_frame_time = time.time()
             self.active_username = username
 
     def release_camera(self):
         # Control 5: Automated Resource Release
-        # Does NOT stop the buffer thread — viewers stay alive
+        # Does NOT stop the buffer thread — viewer feed stays alive
         if self.cap is not None:
             self.cap.release()
             self.cap = None
-        self.is_running = False
+        self.is_running  = False
         self.active_token = None
 
     # ------------------------------------------------------------------
-    # FRAME BUFFER: single background thread owns cap exclusively
+    # FRAME BUFFER: one background thread owns cap, writes frames + seq
     # ------------------------------------------------------------------
     def _buffer_loop(self):
-        fps_cap = 15
+        fps_cap    = 15
         frame_delay = 1.0 / fps_cap
 
         while self._buffer_running:
@@ -81,17 +85,17 @@ class SecureCameraSingleton:
 
             with self._lock:
                 if self.cap is None or not self.cap.isOpened():
-                    time.sleep(0.5)
+                    time.sleep(0.3)
                     continue
                 success, frame = self.cap.read()
 
             if not success or frame is None or frame.size == 0:
-                time.sleep(0.1)
+                time.sleep(0.05)
                 continue
 
             # Control 8: Blank frame guard
             if cv2.mean(frame)[0] < 2.0:
-                time.sleep(0.1)
+                time.sleep(0.05)
                 continue
 
             # Control 9: Timestamp overlay
@@ -103,38 +107,33 @@ class SecureCameraSingleton:
             if not ret:
                 continue
 
-            # Store new frame and SIGNAL waiters
+            # Atomically store new frame and bump sequence counter
             with self.frame_lock:
-                self.latest_frame = buffer.tobytes()
+                self.latest_frame  = buffer.tobytes()
+                self.frame_seq    += 1
                 self.last_frame_time = time.time()
-
-            self.frame_event.set()   # wake up any waiting streams/viewers
-            self.frame_event.clear() # reset immediately so next frame is a fresh signal
 
             # Control 6: FPS throttle
             elapsed = time.time() - start
-            if elapsed < frame_delay:
-                time.sleep(frame_delay - elapsed)
+            sleep_for = frame_delay - elapsed
+            if sleep_for > 0:
+                time.sleep(sleep_for)
 
     def start_buffer(self):
         """Start background frame buffer thread (idempotent)."""
         if self._buffer_running and self._buffer_thread and self._buffer_thread.is_alive():
             return
         self._buffer_running = True
-        self._buffer_thread = threading.Thread(target=self._buffer_loop, daemon=True)
+        self._buffer_thread  = threading.Thread(target=self._buffer_loop, daemon=True)
         self._buffer_thread.start()
 
     def stop_buffer(self):
         self._buffer_running = False
 
-    def get_latest_frame(self):
-        """Return latest JPEG bytes, or None if not ready."""
+    def get_frame_and_seq(self):
+        """Return (jpeg_bytes, seq_number) atomically."""
         with self.frame_lock:
-            return self.latest_frame
-
-    def wait_for_new_frame(self, timeout=1.0):
-        """Block until a new frame is ready (or timeout). Returns True if new frame arrived."""
-        return self.frame_event.wait(timeout=timeout)
+            return self.latest_frame, self.frame_seq
 
     def auto_start(self):
         """Auto-initialize camera + buffer on app startup."""
@@ -146,8 +145,7 @@ class SecureCameraSingleton:
                 self.start_buffer()
             except Exception:
                 pass
-        t = threading.Thread(target=_start, daemon=True)
-        t.start()
+        threading.Thread(target=_start, daemon=True).start()
 
 
 camera_manager = SecureCameraSingleton()
@@ -189,16 +187,19 @@ def get_validated_client_ip():
 
 
 # =====================================================================
-# HARDENING MODULE V: Admin MJPEG stream — waits for NEW frames
+# HARDENING MODULE V: Admin MJPEG stream — sequence-number driven
 # =====================================================================
 def generate_secure_frames(validated_token, username):
     """
     MJPEG stream for admin dashboard.
-    Uses frame_event to wait for genuinely new frames — no frozen feed.
+
+    Tracks last_seq — only yields when frame_seq has changed.
+    No Event race conditions; no spinning on the same frame.
     """
-    no_frame_timeout = 10  # seconds of no frames before giving up
+    last_seq          = -1
+    no_frame_timeout  = 10   # seconds with no new frame before giving up
+    last_new_frame_at = time.time()
     disconnect_logged = False
-    last_yield_time = time.time()
 
     try:
         while True:
@@ -206,22 +207,20 @@ def generate_secure_frames(validated_token, username):
             if camera_manager.active_token != validated_token:
                 break
 
-            # Wait for a new frame (up to 1s) instead of spinning
-            got_new = camera_manager.wait_for_new_frame(timeout=1.0)
+            frame_bytes, current_seq = camera_manager.get_frame_and_seq()
 
-            if not got_new:
-                # No new frame within 1s — check overall timeout
-                if (time.time() - camera_manager.last_frame_time) > no_frame_timeout:
+            if current_seq == last_seq or frame_bytes is None:
+                # No new frame yet — sleep briefly and check again
+                if (time.time() - last_new_frame_at) > no_frame_timeout:
                     break
+                time.sleep(0.02)   # 20ms poll — tight enough, no spin-burn
                 continue
 
-            frame_bytes = camera_manager.get_latest_frame()
-            if frame_bytes is None:
-                continue
+            # New frame arrived
+            last_seq          = current_seq
+            last_new_frame_at = time.time()
 
-            last_yield_time = time.time()
-
-            # Control 7: MJPEG boundary
+            # Control 7: MJPEG boundary delivery
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
@@ -234,7 +233,7 @@ def generate_secure_frames(validated_token, username):
                 log = CameraLog(
                     event='CAMERA_STREAM_STOPPED',
                     username=username,
-                    description=f'Admin MJPEG stream ended — buffer still active',
+                    description='Admin MJPEG stream ended — buffer still active for viewers',
                     ip_address='SERVER'
                 )
                 db.session.add(log)
@@ -288,9 +287,9 @@ def secure_video_feed():
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Pragma"]        = "no-cache"
+    response.headers["Expires"]       = "0"
+    response.headers["X-Frame-Options"]         = "DENY"
     response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
     return response
 
@@ -301,15 +300,13 @@ def secure_video_feed():
 @camera_bp.route('/viewer_frame')
 def viewer_frame():
     """
-    Viewer polls this every ~150ms to get the latest frame as base64 JSON.
+    Viewer polls this every ~150ms for the latest frame as base64 JSON.
     Reads from the shared buffer — never touches cap directly.
-    Session check: viewer role only.
     """
-    # Viewer session guard
     if not session.get('user') or session.get('role') != 'viewer':
         return jsonify({'error': 'unauthorized'}), 403
 
-    frame_bytes = camera_manager.get_latest_frame()
+    frame_bytes, _ = camera_manager.get_frame_and_seq()
 
     if frame_bytes is None:
         return jsonify({'available': False}), 200
