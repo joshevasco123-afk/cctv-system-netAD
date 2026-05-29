@@ -62,6 +62,11 @@ def get_sanitized_ip():
     return "".join(c for c in ip if c.isalnum() or c in [".", ":"])
 
 
+def is_ip_blocked(ip: str) -> bool:
+    from database.models import BlockedIP
+    return BlockedIP.query.filter_by(ip_address=ip).first() is not None
+
+
 def secure_session_destruct():
     session.clear()
 
@@ -199,6 +204,10 @@ def login():
     client_ip = get_sanitized_ip()
     now = time.time()
 
+    # ── Block check ───────────────────────────────────────────────────
+    if is_ip_blocked(client_ip):
+        return render_with_error("Access denied. Your IP has been blocked by the administrator.")
+
     if client_ip in IP_FAILED_ATTEMPTS:
         failures, lockout_time = IP_FAILED_ATTEMPTS[client_ip]
         if failures >= 10:
@@ -335,6 +344,11 @@ def viewer_login():
     from database.models import User
     client_ip = get_sanitized_ip()
     now = time.time()
+
+    # ── Block check ───────────────────────────────────────────────────
+    if is_ip_blocked(client_ip):
+        return make_response(render_template("viewer_login.html",
+            error="Access denied. Your IP has been blocked by the administrator."))
 
     if client_ip in IP_FAILED_ATTEMPTS:
         failures, lockout_time = IP_FAILED_ATTEMPTS[client_ip]
