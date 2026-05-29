@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, session, redirect, url_for, current_app
+from flask import Blueprint, render_template, session, redirect, url_for, current_app, jsonify
 from functools import wraps
+from routes.camera import camera_manager
 import time
 import secrets
 
@@ -39,3 +40,29 @@ def viewer_login_required(f):
 @viewer_login_required
 def viewer():
     return render_template("viewer.html", username=session.get("user"))
+
+@viewer_bp.route("/viewer_frame")
+@viewer_login_required
+def viewer_frame():
+    """Returns the latest camera frame as base64 JSON for viewer polling."""
+    import cv2
+    import base64
+
+    try:
+        with camera_manager._lock:
+            if camera_manager.cap is None or not camera_manager.cap.isOpened():
+                return jsonify({'ok': False, 'frame': None}), 503
+            success, frame = camera_manager.cap.read()
+
+        if not success or frame is None or frame.size == 0:
+            return jsonify({'ok': False, 'frame': None}), 503
+
+        ret, buffer = cv2.imencode('.jpg', frame)
+        if not ret:
+            return jsonify({'ok': False, 'frame': None}), 503
+
+        b64 = base64.b64encode(buffer.tobytes()).decode('utf-8')
+        return jsonify({'ok': True, 'frame': b64})
+
+    except Exception:
+        return jsonify({'ok': False, 'frame': None}), 503

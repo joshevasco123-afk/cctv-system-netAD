@@ -188,7 +188,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
+            display: none;
         }
 
         /* Scanline overlay */
@@ -284,9 +284,8 @@
         </div>
 
         <div class="feed-body">
-            <img src="/video_feed" alt="Live Camera Feed"
-                 onerror="this.style.display='none'; document.getElementById('offline-msg').style.display='flex';">
-            <div class="feed-offline" id="offline-msg" style="display:none;">
+            <img id="viewerFeed" alt="Live Camera Feed">
+            <div class="feed-offline" id="offline-msg">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>FEED UNAVAILABLE</p>
             </div>
@@ -305,6 +304,7 @@
 </main>
 
 <script>
+    // ── Clock ──
     function updateClock() {
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
@@ -314,6 +314,31 @@
     }
     updateClock();
     setInterval(updateClock, 1000);
+
+    // ── Viewer feed via polling ──
+    const viewerImg  = document.getElementById('viewerFeed');
+    const offlineMsg = document.getElementById('offline-msg');
+
+    async function pollFrame() {
+        try {
+            const resp = await fetch('/viewer_frame');
+            const data = await resp.json();
+            if (data.ok && data.frame) {
+                viewerImg.src = 'data:image/jpeg;base64,' + data.frame;
+                viewerImg.style.display = 'block';
+                offlineMsg.style.display = 'none';
+            } else {
+                viewerImg.style.display = 'none';
+                offlineMsg.style.display = 'flex';
+            }
+        } catch (err) {
+            viewerImg.style.display = 'none';
+            offlineMsg.style.display = 'flex';
+        }
+    }
+
+    setInterval(pollFrame, 150);
+    pollFrame();
 </script>
 
 </body>
