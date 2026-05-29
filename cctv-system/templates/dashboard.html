@@ -1244,20 +1244,25 @@
         initLiveFeed();
     });
 
-    async function initLiveFeed() {
-    try {
-        const resp = await fetch('/request_stream_token', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() }
-        });
-        const data = await resp.json();
-        if (data.stream_token) {
-            const img = document.getElementById('liveFeedImg');
-            img.src = '/video_feed?token=' + data.stream_token;
-        }
-    } catch (err) {
-        console.error('Failed to init stream:', err);
+   async function initLiveFeed() {
+    const img = document.getElementById('liveFeedImg');
+    let lastSeq = -1;
+
+    async function pollFrame() {
+        try {
+            const resp = await fetch('/viewer_frame', { credentials: 'include' });
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.ok && data.seq !== lastSeq) {
+                    lastSeq = data.seq;
+                    img.src = 'data:image/jpeg;base64,' + data.frame;
+                }
+            }
+        } catch (err) {}
+        setTimeout(pollFrame, 150);
     }
+
+    pollFrame();
 }
 </script>
 </body>
