@@ -26,7 +26,7 @@ class SecureCameraSingleton:
                 cls._instance.active_token = None
                 cls._instance.last_frame_time = 0
                 cls._instance.last_frame_checksum = None
-                cls._instance.active_username = None  # track who opened the stream
+                cls._instance.active_username = None
         return cls._instance
 
     def initialize_camera(self, username=None):
@@ -56,7 +56,7 @@ class SecureCameraSingleton:
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             self.is_running = True
             self.last_frame_time = time.time()
-            self.active_username = username  # store who started it
+            self.active_username = username
 
     def release_camera(self):
         # Control 5: Automated Resource Release Mechanism
@@ -65,10 +65,24 @@ class SecureCameraSingleton:
             self.cap = None
         self.is_running = False
         self.active_token = None
-        # Note: keep active_username so the finally-block in the generator
-        # can still log who was using the camera when it disconnected.
+
+    def auto_start(self):
+        """Auto-initialize camera in a background thread on app startup.
+        This allows viewers to see the feed without admin needing to open it first."""
+        def _start():
+            time.sleep(3)  # brief delay to let app fully initialize
+            try:
+                with self._lock:
+                    self.initialize_camera(username='system')
+            except Exception:
+                pass  # Fail silently — camera may not be available yet
+        t = threading.Thread(target=_start, daemon=True)
+        t.start()
 
 camera_manager = SecureCameraSingleton()
+
+# ── Auto-start camera on module load ─────────────────────────────────
+camera_manager.auto_start()
 
 # =====================================================================
 # HARDENING MODULE I & VII: Custom Authentication & Session Decorators
@@ -208,6 +222,9 @@ def generate_secure_frames(validated_token, username):
 def request_stream_token():
     token = secrets.token_hex(32)
     camera_manager.active_token = token
+    # Re-initialize camera if it was released
+    with camera_manager._lock:
+        camera_manager.initialize_camera(username=session.get('user', 'admin'))
     return {"stream_token": token}, 200
 
 @camera_bp.route('/video_feed')
