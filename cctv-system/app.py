@@ -110,7 +110,7 @@ def login_required(f):
             return redirect(url_for("login"))
         session["last_activity"] = now
         return f(*args, **kwargs)
-
+    return decorated_function
 
 # ======================================================================
 # GLOBAL HTTP SECURITY HEADERS
@@ -396,7 +396,7 @@ def viewer_login():
             db.session.add(log)
             db.session.commit()
 
-            log = LoginLog(username=input_user, ip_address=client_ip, status='failed', role='admin')
+            log = LoginLog(username=input_user, ip_address=client_ip, status='failed', role='viewer')
             db.session.add(log)
             db.session.commit()
 
