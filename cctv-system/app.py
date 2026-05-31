@@ -259,7 +259,7 @@ def login():
             db.session.add(log)
             db.session.commit()
 
-            log = LoginLog(username=input_user, ip_address=client_ip, status='failed')
+            log = LoginLog(username=input_user, ip_address=client_ip, status='failed', role='viewer')
             db.session.add(log)
             db.session.commit()
 
@@ -310,7 +310,7 @@ def verify_otp():
             db.session.add(log)
             db.session.commit()
 
-            log = LoginLog(username=env_admin_user, ip_address=client_ip, status='success')
+            log = LoginLog(username=env_admin_user, ip_address=client_ip, status='success', role='admin')
             db.session.add(log)
             db.session.commit()
 
@@ -394,7 +394,7 @@ def viewer_login():
             db.session.add(log)
             db.session.commit()
 
-            log = LoginLog(username=input_user, ip_address=client_ip, status='failed')
+            log = LoginLog(username=input_user, ip_address=client_ip, status='failed', role='admin')
             db.session.add(log)
             db.session.commit()
 
@@ -457,7 +457,7 @@ def viewer_verify_otp():
             db.session.add(log)
             db.session.commit()
 
-            log = LoginLog(username=username, ip_address=client_ip, status='success')
+            log = LoginLog(username=username, ip_address=client_ip, status='success', role='viewer')
             db.session.add(log)
             db.session.commit()
 

@@ -20,6 +20,7 @@ class LoginLog(db.Model):
     username = db.Column(db.String(100), nullable=False)
     ip_address = db.Column(db.String(50), nullable=False)
     status = db.Column(db.String(20), nullable=False)
+    role = db.Column(db.String(20), default='admin')
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(PH_TZ))
 
 class CameraLog(db.Model):

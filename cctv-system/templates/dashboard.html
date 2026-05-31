@@ -1080,9 +1080,9 @@
         }
     }
 
-    liveViewTab.addEventListener('click',  () => setActiveTab('live'));
-    logsTab.addEventListener('click',      () => setActiveTab('logs'));
-    settingsTab.addEventListener('click',  () => setActiveTab('settings'));
+    liveViewTab.addEventListener('click',  () => { setActiveTab('live');     localStorage.setItem('activeTab', 'live'); });
+    logsTab.addEventListener('click',      () => { setActiveTab('logs');     localStorage.setItem('activeTab', 'logs'); });
+    settingsTab.addEventListener('click',  () => { setActiveTab('settings'); localStorage.setItem('activeTab', 'settings'); });
 
     // ── Logout modal ──
     const logoutModal  = document.getElementById('logoutModal');
@@ -1240,6 +1240,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        setActiveTab(localStorage.getItem('activeTab') || 'live');
         updateStatsPeriodically();
         initLiveFeed();
     });
