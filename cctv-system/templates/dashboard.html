@@ -748,6 +748,16 @@
         <div id="logsPanel" style="display:none;">
 
             <!-- Login Logs -->
+             <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
+    <select id="filterRole" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
+        <option value="all">All Roles</option>
+        <option value="admin">Admin only</option>
+        <option value="viewer">Viewer only</option>
+    </select>
+    <input type="date" id="filterDate" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
+    <button onclick="applyLogFilter()" style="padding:0.5rem 1.2rem; background:#2e7d32; color:white; border:none; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;"><i class="fas fa-filter"></i> Filter</button>
+    <button onclick="clearLogFilter()" style="padding:0.5rem 1.2rem; background:#eef5ee; color:#2c5e2c; border:1.5px solid #cfdfcf; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Clear</button>
+</div>
             <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-sign-in-alt" style="color:#2e7d32; margin-right:8px;"></i>Login Logs</h3>
             <div style="overflow-x:auto; margin-bottom:2rem;">
                 <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
@@ -767,7 +777,7 @@
                     </thead>
                     <tbody>
                         {% for log in login_logs %}
-                        <tr style="border-bottom:1px solid #eef3ee; {% if log.status == 'failed' %}background:#fffafa;{% endif %}">
+                        <tr class="log-row" data-role="{{ log.role or 'admin' }}" data-date="{{ log.timestamp.strftime('%Y-%m-%d') }}" style="border-bottom:1px solid #eef3ee; {% if log.status == 'failed' %}background:#fffafa;{% endif %}">
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
                             <td style="padding:0.7rem 1rem; font-weight:500; color:#1e3a1e;">{{ log.username }}</td>
                             <td style="padding:0.7rem 1rem; color:#4a6a4a; font-family:monospace;">{{ log.ip_address }}</td>
@@ -1264,6 +1274,21 @@
     }
 
     pollFrame();
+}
+function applyLogFilter() {
+    const role = document.getElementById('filterRole').value;
+    const date = document.getElementById('filterDate').value;
+    document.querySelectorAll('.log-row').forEach(row => {
+        const matchRole = role === 'all' || row.dataset.role === role;
+        const matchDate = !date || row.dataset.date === date;
+        row.style.display = (matchRole && matchDate) ? '' : 'none';
+    });
+}
+
+function clearLogFilter() {
+    document.getElementById('filterRole').value = 'all';
+    document.getElementById('filterDate').value = '';
+    document.querySelectorAll('.log-row').forEach(row => row.style.display = '');
 }
 </script>
 </body>
