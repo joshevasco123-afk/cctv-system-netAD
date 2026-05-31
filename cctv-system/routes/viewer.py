@@ -30,8 +30,11 @@ def viewer_login_required(f):
             session.clear()
             return redirect(url_for("viewer_login"))
 
-        from app import is_ip_blocked, get_sanitized_ip
-        if is_ip_blocked(get_sanitized_ip()):
+        from flask import request
+        from database.models import BlockedIP
+        raw_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+        client_ip = "".join(c for c in raw_ip.split(",")[0].strip() if c.isalnum() or c in [".", ":"])
+        if BlockedIP.query.filter_by(ip_address=client_ip).first():
             session.clear()
             return redirect(url_for("viewer_login"))
         session["last_activity"] = now
