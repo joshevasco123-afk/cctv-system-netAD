@@ -36,6 +36,7 @@ def viewer_login_required(f):
             return redirect(url_for("viewer_login"))
         session["last_activity"] = now
         return f(*args, **kwargs)
+    return decorated
 
 
 @viewer_bp.route("/viewer")
