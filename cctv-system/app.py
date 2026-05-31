@@ -105,9 +105,11 @@ def login_required(f):
             secure_session_destruct()
             return redirect(url_for("login"))
 
+        if is_ip_blocked(get_sanitized_ip()):
+            secure_session_destruct()
+            return redirect(url_for("login"))
         session["last_activity"] = now
         return f(*args, **kwargs)
-    return decorated_function
 
 
 # ======================================================================

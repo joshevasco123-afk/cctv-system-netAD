@@ -30,9 +30,12 @@ def viewer_login_required(f):
             session.clear()
             return redirect(url_for("viewer_login"))
 
+        from app import is_ip_blocked, get_sanitized_ip
+        if is_ip_blocked(get_sanitized_ip()):
+            session.clear()
+            return redirect(url_for("viewer_login"))
         session["last_activity"] = now
         return f(*args, **kwargs)
-    return decorated
 
 
 @viewer_bp.route("/viewer")
