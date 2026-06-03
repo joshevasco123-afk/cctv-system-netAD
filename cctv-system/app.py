@@ -132,7 +132,7 @@ def inject_security_headers(response):
         "frame-ancestors 'none';"
     )
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    response.headers["Access-Control-Allow-Origin"] = "null"
+    response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST"
     return response
 
