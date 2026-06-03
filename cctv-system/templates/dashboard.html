@@ -122,7 +122,7 @@
             padding: 2rem;
         }
 
-        /* Live feed */
+        /* ── LIVE FEED ── */
         .live-feed-main {
             background: #0d1f0d;
             border-radius: 20px;
@@ -167,11 +167,187 @@
             50% { opacity: 0.3; }
         }
 
+        /* ── FEED VIEWPORT ── */
+        .feed-viewport {
+            position: relative;
+            width: 100%;
+            background: #060f06;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
         .live-feed-img {
             width: 100%;
             max-height: 420px;
             object-fit: cover;
             display: block;
+        }
+
+        /* Cloudflare iframe */
+        .cf-iframe {
+            width: 100%;
+            height: 420px;
+            border: none;
+            display: block;
+        }
+
+        /* "LIVE" badge overlay (top-left of viewport) */
+        .live-badge-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #e53935;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 0.22rem 0.6rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .live-badge-overlay.visible {
+            opacity: 1;
+        }
+
+        .live-badge-overlay .dot {
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.2s infinite;
+        }
+
+        /* Collapse button overlay (top-right) */
+        .collapse-btn-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(30, 50, 30, 0.75);
+            border: 1px solid rgba(100, 200, 100, 0.25);
+            color: #a0e0a0;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 0.28rem 0.7rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 10;
+            transition: background 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .collapse-btn-overlay:hover {
+            background: rgba(46, 125, 50, 0.85);
+            color: white;
+        }
+
+        /* Placeholder when no stream */
+        .feed-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            color: #3a6a3a;
+            padding: 3rem 1rem;
+            width: 100%;
+        }
+
+        .feed-placeholder i {
+            font-size: 2.5rem;
+            opacity: 0.4;
+        }
+
+        .feed-placeholder p {
+            font-size: 0.82rem;
+            opacity: 0.5;
+        }
+
+        /* ── CF URL INPUT BAR ── */
+        .cf-url-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: #0f1f0f;
+            border-top: 1px solid #1e3a1e;
+            padding: 0.55rem 0.7rem;
+        }
+
+        .cf-url-input {
+            flex: 1;
+            background: #1a2e1a;
+            border: 1px solid #2a4a2a;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: #c2f0c2;
+            font-size: 0.82rem;
+            font-family: monospace;
+            padding: 0.55rem 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .cf-url-input::placeholder {
+            color: #3a6a3a;
+        }
+
+        .cf-url-input:focus {
+            border-color: #4caf50;
+            background: #1e361e;
+        }
+
+        .cf-connect-btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 0.55rem 1.1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .cf-connect-btn:hover {
+            background: #388e3c;
+        }
+
+        .cf-disc-btn {
+            background: #c62828;
+            color: white;
+            border: none;
+            padding: 0.55rem 1.1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .cf-disc-btn:hover {
+            background: #b71c1c;
         }
 
         /* Stats */
@@ -355,7 +531,6 @@
             font-weight: 600;
         }
 
-        /* Block IP button (inline in table) */
         .btn-block-ip {
             background: #ffe9e9;
             color: #c62828;
@@ -391,7 +566,6 @@
             font-weight: 600;
         }
 
-        /* Unblock button (in settings) */
         .btn-unblock-ip {
             background: #e8f5e8;
             color: #2e7d32;
@@ -417,7 +591,6 @@
             color: #5a6e5a;
         }
 
-        /* Blocked IPs settings card */
         .blocked-ips-card {
             max-width: 600px;
             margin: 0 auto 2rem auto;
@@ -586,6 +759,16 @@
         .toast.error {
             background: #c62828;
         }
+
+        /* Feed collapsed state */
+        .feed-viewport.collapsed {
+            max-height: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .cf-url-bar.collapsed {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -632,9 +815,49 @@
                         <div class="live-dot"></div> LIVE
                     </div>
                 </div>
-                <img id="liveFeedImg" class="live-feed-img"
-                     src=""
-                     alt="Live Feed">
+
+                <!-- Feed viewport -->
+                <div class="feed-viewport" id="feedViewport">
+                    <!-- LIVE badge overlay -->
+                    <div class="live-badge-overlay" id="liveBadge">
+                        <span class="dot"></span> LIVE
+                    </div>
+
+                    <!-- Collapse button overlay -->
+                    <button class="collapse-btn-overlay" id="collapseBtn" onclick="toggleFeedCollapse()">
+                        <i class="fas fa-compress-alt"></i> COLLAPSE
+                    </button>
+
+                    <!-- Default polling feed (hidden when CF is active) -->
+                    <img id="liveFeedImg" class="live-feed-img" src="" alt="Live Feed">
+
+                    <!-- Cloudflare iframe (hidden until connected) -->
+                    <iframe id="cfIframe" class="cf-iframe" style="display:none;" allowfullscreen></iframe>
+
+                    <!-- Placeholder shown when no stream at all -->
+                    <div class="feed-placeholder" id="feedPlaceholder">
+                        <i class="fas fa-video-slash"></i>
+                        <p>Paste a Cloudflare tunnel URL below and press CONNECT</p>
+                    </div>
+                </div>
+
+                <!-- Cloudflare URL input bar -->
+                <div class="cf-url-bar" id="cfUrlBar">
+                    <input
+                        type="text"
+                        id="cfUrlInput"
+                        class="cf-url-input"
+                        placeholder="https://your-tunnel.trycloudflare.com/frame"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button class="cf-connect-btn" onclick="connectCF()">
+                        <i class="fas fa-plug"></i> CONNECT
+                    </button>
+                    <button class="cf-disc-btn" onclick="disconnectCF()">
+                        <i class="fas fa-times"></i> DISC
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Row -->
@@ -747,17 +970,17 @@
         <!-- ==================== LOGS PANEL ==================== -->
         <div id="logsPanel" style="display:none;">
 
-            <!-- Login Logs -->
-             <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
-    <select id="filterRole" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
-        <option value="all">All Roles</option>
-        <option value="admin">Admin only</option>
-        <option value="viewer">Viewer only</option>
-    </select>
-    <input type="date" id="filterDate" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
-    <button onclick="applyLogFilter()" style="padding:0.5rem 1.2rem; background:#2e7d32; color:white; border:none; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;"><i class="fas fa-filter"></i> Filter</button>
-    <button onclick="clearLogFilter()" style="padding:0.5rem 1.2rem; background:#eef5ee; color:#2c5e2c; border:1.5px solid #cfdfcf; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Clear</button>
-</div>
+            <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
+                <select id="filterRole" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin only</option>
+                    <option value="viewer">Viewer only</option>
+                </select>
+                <input type="date" id="filterDate" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
+                <button onclick="applyLogFilter()" style="padding:0.5rem 1.2rem; background:#2e7d32; color:white; border:none; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;"><i class="fas fa-filter"></i> Filter</button>
+                <button onclick="clearLogFilter()" style="padding:0.5rem 1.2rem; background:#eef5ee; color:#2c5e2c; border:1.5px solid #cfdfcf; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Clear</button>
+            </div>
+
             <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-sign-in-alt" style="color:#2e7d32; margin-right:8px;"></i>Login Logs</h3>
             <div style="overflow-x:auto; margin-bottom:2rem;">
                 <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
@@ -943,7 +1166,6 @@
                 </div>
             </div>
 
-            <!-- ── BLOCKED IPs MANAGEMENT (admin only) ── -->
             {% if session.get('role') == 'admin' %}
             <div class="blocked-ips-card">
                 <div class="blocked-ips-card-header">
@@ -979,7 +1201,6 @@
             </div>
             {% endif %}
 
-            <!-- Register new user — admin only -->
             {% if session.get('role') == 'admin' %}
             <div style="max-width:420px; margin: 2rem auto; background:white; border-radius:20px; padding:2rem; border:1px solid #e2efe2; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <h3 style="color:#1e3a1e; margin-bottom:0.3rem;">
@@ -1114,7 +1335,6 @@
         const toast = document.getElementById('toast');
         toast.innerHTML = (isError ? '<i class="fas fa-exclamation-circle"></i> ' : '<i class="fas fa-check-circle"></i> ') + msg;
         toast.className = 'toast' + (isError ? ' error' : '');
-        // force reflow so transition triggers
         void toast.offsetWidth;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
@@ -1152,14 +1372,12 @@
 
     modalConfirmBlock.addEventListener('click', async () => {
         if (!_pendingBlockIP) return;
-
         blockIPModal.classList.remove('active');
         const ip  = _pendingBlockIP;
         const btn = _pendingBlockBtn;
         _pendingBlockIP  = null;
         _pendingBlockBtn = null;
 
-        // Optimistic UI — disable button immediately
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -1175,7 +1393,6 @@
 
             if (resp.ok && data.success) {
                 showToast('IP ' + ip + ' has been blocked.');
-                // Replace button with "Blocked" tag
                 if (btn) {
                     const tag = document.createElement('span');
                     tag.className = 'already-blocked-tag';
@@ -1233,7 +1450,6 @@
 
     // ── CSRF helper ──
     function getCsrfToken() {
-        // Grab from any existing hidden CSRF input on the page
         const el = document.querySelector('input[name="csrf_token"]');
         return el ? el.value : '';
     }
@@ -1249,47 +1465,149 @@
         }, 9800);
     }
 
+    // ── Cloudflare stream logic ──
+    let cfMode = false; // true = CF iframe active, false = polling feed active
+
+    function connectCF() {
+        const url = document.getElementById('cfUrlInput').value.trim();
+        if (!url) {
+            showToast('Please paste a Cloudflare tunnel URL first.', true);
+            return;
+        }
+        if (!url.startsWith('http')) {
+            showToast('URL must start with https://', true);
+            return;
+        }
+
+        const iframe    = document.getElementById('cfIframe');
+        const img       = document.getElementById('liveFeedImg');
+        const badge     = document.getElementById('liveBadge');
+        const placeholder = document.getElementById('feedPlaceholder');
+
+        // Stop the default polling feed
+        cfMode = true;
+
+        // Hide polling img and placeholder, show iframe
+        img.style.display         = 'none';
+        placeholder.style.display = 'none';
+        iframe.src                = url;
+        iframe.style.display      = 'block';
+
+        // Show LIVE badge
+        badge.classList.add('visible');
+
+        showToast('Connected to Cloudflare stream.');
+    }
+
+    function disconnectCF() {
+        const iframe      = document.getElementById('cfIframe');
+        const img         = document.getElementById('liveFeedImg');
+        const badge       = document.getElementById('liveBadge');
+        const placeholder = document.getElementById('feedPlaceholder');
+
+        cfMode = false;
+
+        // Stop iframe and hide it
+        iframe.src           = '';
+        iframe.style.display = 'none';
+
+        // Restore polling feed
+        img.style.display         = 'block';
+        placeholder.style.display = 'none';
+
+        // Hide LIVE badge (polling feed has its own indicator in the header)
+        badge.classList.remove('visible');
+
+        showToast('Stream disconnected.');
+    }
+
+    // ── Collapse / expand feed viewport ──
+    let feedCollapsed = false;
+
+    function toggleFeedCollapse() {
+        const viewport = document.getElementById('feedViewport');
+        const urlBar   = document.getElementById('cfUrlBar');
+        const btn      = document.getElementById('collapseBtn');
+
+        feedCollapsed = !feedCollapsed;
+
+        if (feedCollapsed) {
+            viewport.style.maxHeight = '0';
+            viewport.style.minHeight = '0';
+            viewport.style.overflow  = 'hidden';
+            urlBar.style.display     = 'none';
+            btn.innerHTML            = '<i class="fas fa-expand-alt"></i> EXPAND';
+        } else {
+            viewport.style.maxHeight = '';
+            viewport.style.minHeight = '';
+            viewport.style.overflow  = '';
+            urlBar.style.display     = '';
+            btn.innerHTML            = '<i class="fas fa-compress-alt"></i> COLLAPSE';
+        }
+    }
+
+    // ── Default polling feed (only runs when CF is not active) ──
+    async function initLiveFeed() {
+        const img = document.getElementById('liveFeedImg');
+        const placeholder = document.getElementById('feedPlaceholder');
+        let lastSeq = -1;
+        let hasFrame = false;
+
+        async function pollFrame() {
+            if (cfMode) {
+                setTimeout(pollFrame, 1000);
+                return;
+            }
+            try {
+                const resp = await fetch('/viewer_frame', { credentials: 'include' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.ok && data.seq !== lastSeq) {
+                        lastSeq = data.seq;
+                        img.src = 'data:image/jpeg;base64,' + data.frame;
+                        if (!hasFrame) {
+                            hasFrame = true;
+                            placeholder.style.display = 'none';
+                            img.style.display = 'block';
+                        }
+                    }
+                }
+            } catch (err) {}
+            setTimeout(pollFrame, 1000);
+        }
+
+        // Initially hide the img until we get a frame
+        img.style.display = 'none';
+        pollFrame();
+    }
+
+    function applyLogFilter() {
+        const role = document.getElementById('filterRole').value;
+        const date = document.getElementById('filterDate').value;
+        document.querySelectorAll('.log-row').forEach(row => {
+            const matchRole = role === 'all' || row.dataset.role === role;
+            const matchDate = !date || row.dataset.date === date;
+            row.style.display = (matchRole && matchDate) ? '' : 'none';
+        });
+    }
+
+    function clearLogFilter() {
+        document.getElementById('filterRole').value = 'all';
+        document.getElementById('filterDate').value = '';
+        document.querySelectorAll('.log-row').forEach(row => row.style.display = '');
+    }
+
+    // ── Init ──
     window.addEventListener('DOMContentLoaded', () => {
         setActiveTab(localStorage.getItem('activeTab') || 'live');
         updateStatsPeriodically();
         initLiveFeed();
+
+        // Allow pressing Enter in the URL input to connect
+        document.getElementById('cfUrlInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') connectCF();
+        });
     });
-
-   async function initLiveFeed() {
-    const img = document.getElementById('liveFeedImg');
-    let lastSeq = -1;
-
-    async function pollFrame() {
-        try {
-            const resp = await fetch('/viewer_frame', { credentials: 'include' });
-            if (resp.ok) {
-                const data = await resp.json();
-                if (data.ok && data.seq !== lastSeq) {
-                    lastSeq = data.seq;
-                    img.src = 'data:image/jpeg;base64,' + data.frame;
-                }
-            }
-        } catch (err) {}
-        setTimeout(pollFrame, 1000);
-    }
-
-    pollFrame();
-}
-function applyLogFilter() {
-    const role = document.getElementById('filterRole').value;
-    const date = document.getElementById('filterDate').value;
-    document.querySelectorAll('.log-row').forEach(row => {
-        const matchRole = role === 'all' || row.dataset.role === role;
-        const matchDate = !date || row.dataset.date === date;
-        row.style.display = (matchRole && matchDate) ? '' : 'none';
-    });
-}
-
-function clearLogFilter() {
-    document.getElementById('filterRole').value = 'all';
-    document.getElementById('filterDate').value = '';
-    document.querySelectorAll('.log-row').forEach(row => row.style.display = '');
-}
 </script>
 </body>
 </html>
