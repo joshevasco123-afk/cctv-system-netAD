@@ -858,7 +858,7 @@
         cfMode = true;
 
         // Register URL with Railway so all viewers get the stream too
-        fetch('/set_cf_relay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url }) }).catch(() => {});
+        fetch('/set_cf_relay', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() }, body: JSON.stringify({ url: url }) }).catch(() => {});
 
         const img         = document.getElementById('liveFeedImg');
         const badge       = document.getElementById('liveBadge');
@@ -906,7 +906,7 @@
         _stopCFPoller();
 
         // Stop Railway relay so viewers see offline state
-        fetch('/set_cf_relay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: '' }) }).catch(() => {});
+        fetch('/set_cf_relay', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() }, body: JSON.stringify({ url: '' }) }).catch(() => {});
 
         const img      = document.getElementById('liveFeedImg');
         const badge    = document.getElementById('liveBadge');
