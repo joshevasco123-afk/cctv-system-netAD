@@ -92,10 +92,8 @@
 
         .live-feed-img { width: 100%; max-height: 420px; object-fit: cover; display: block; }
 
-        /* ── FIX: iframe with sandbox allowing scripts for CF tunnels ── */
-        .cf-iframe {
-            width: 100%; height: 420px; border: none; display: block;
-        }
+        /* CF stream renders directly into the img tag — no iframe needed */
+        .cf-iframe { display: none !important; }
 
         .live-badge-overlay {
             position: absolute; top: 12px; left: 12px;
@@ -328,14 +326,14 @@
 
                     <div class="feed-placeholder" id="feedPlaceholder">
                         <i class="fas fa-video-slash"></i>
-                        <p>Paste a Cloudflare tunnel URL below and press CONNECT</p>
+                        <p>Paste your Cloudflare tunnel base URL below and press CONNECT</p>
+                        <p style="font-size:0.75rem; opacity:0.4; margin-top:0.3rem;">e.g. https://your-tunnel.trycloudflare.com</p>
                     </div>
                 </div>
 
-                <!-- FIX 1: Error/fallback banner shown if iframe fails to load -->
                 <div class="cf-error-bar" id="cfErrorBar">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>Stream blocked by browser or server. <a onclick="openCFInNewTab()">Open in new tab ↗</a> or check that the tunnel server sends <code>X-Frame-Options: ALLOWALL</code>.</span>
+                    <span>Cannot reach <code>/frame</code> on the tunnel. Is <code>webcam_stream.py</code> running? Is the Cloudflare tunnel active? <a onclick="openCFInNewTab()">Open tunnel in new tab ↗</a></span>
                 </div>
 
                 <!-- CF URL input bar (hidden when collapsed) -->
@@ -344,7 +342,7 @@
                         type="text"
                         id="cfUrlInput"
                         class="cf-url-input"
-                        placeholder="https://your-tunnel.trycloudflare.com/frame"
+                        placeholder="https://your-tunnel.trycloudflare.com"
                         autocomplete="off"
                         spellcheck="false"
                     >
@@ -839,115 +837,122 @@
         }, 9800);
     }
 
-    // ── Cloudflare stream ──
+    // ── Cloudflare stream — direct base64 JSON polling ──
+    // WHY: iframes are blocked by X-Frame-Options / CSP on virtually all CF tunnel pages.
+    // Instead we poll GET {baseUrl}/frame which returns { ok: true, frame: "<base64 jpeg>" }
+    // Each request opens ~5ms then closes — zero persistent connections, Railway stays stable.
     let cfMode = false;
     let _cfUrl = '';
+    let _cfPoller = null;
+    let _cfErrors = 0;
+    const CF_MAX_ERRORS = 8;
+    const CF_POLL_MS = 500; // 2fps — fine for CCTV
 
     function connectCF() {
-        const url = document.getElementById('cfUrlInput').value.trim();
+        const url = document.getElementById('cfUrlInput').value.trim().replace(/\/(video|stream|frame)\/?$/, '');
         if (!url) { showToast('Please paste a Cloudflare tunnel URL first.', true); return; }
         if (!url.startsWith('http')) { showToast('URL must start with https://', true); return; }
 
         _cfUrl = url;
-        const iframe      = document.getElementById('cfIframe');
+        _cfErrors = 0;
+        cfMode = true;
+
         const img         = document.getElementById('liveFeedImg');
         const badge       = document.getElementById('liveBadge');
         const placeholder = document.getElementById('feedPlaceholder');
         const errorBar    = document.getElementById('cfErrorBar');
 
-        cfMode = true;
         errorBar.classList.remove('visible');
-
-        img.style.display         = 'none';
         placeholder.style.display = 'none';
-        iframe.style.display      = 'block';
-
-        // FIX: listen for load error so we can show fallback message
-        iframe.onload = () => {
-            // iframe loaded — check if it's actually showing content by testing contentDocument
-            // Most CF tunnel pages will load fine; X-Frame-Options denial shows a blank iframe
-            // We show the error bar after a delay if the iframe height collapses to 0
-            setTimeout(() => {
-                try {
-                    // If cross-origin, contentDocument will throw — that's fine, means page loaded cross-origin (normal)
-                    const doc = iframe.contentDocument;
-                    if (doc && doc.body && doc.body.innerHTML === '') {
-                        errorBar.classList.add('visible');
-                    }
-                } catch (e) {
-                    // Cross-origin access denied = page DID load (just from another origin) — this is normal and good
-                    errorBar.classList.remove('visible');
-                }
-            }, 2500);
-        };
-        iframe.onerror = () => {
-            errorBar.classList.add('visible');
-        };
-
-        iframe.src = url;
+        img.style.display = 'block';
         badge.classList.add('visible');
         showToast('Connecting to Cloudflare stream…');
+
+        _startCFPoller();
+    }
+
+    function _startCFPoller() {
+        if (_cfPoller) clearInterval(_cfPoller);
+        _cfPoller = setInterval(async () => {
+            if (!cfMode || !_cfUrl) { _stopCFPoller(); return; }
+            try {
+                const r = await fetch(`${_cfUrl}/frame`, { signal: AbortSignal.timeout(2000), headers: { 'ngrok-skip-browser-warning': 'true', 'cf-access-client-id': 'bypass' } });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const d = await r.json();
+                if (d.ok && d.frame) {
+                    document.getElementById('liveFeedImg').src = 'data:image/jpeg;base64,' + d.frame;
+                    document.getElementById('cfErrorBar').classList.remove('visible');
+                    _cfErrors = 0;
+                }
+            } catch (e) {
+                _cfErrors++;
+                if (_cfErrors >= CF_MAX_ERRORS) {
+                    document.getElementById('cfErrorBar').classList.add('visible');
+                    // Keep polling — don't auto-disconnect, let user decide
+                }
+            }
+        }, CF_POLL_MS);
+    }
+
+    function _stopCFPoller() {
+        if (_cfPoller) { clearInterval(_cfPoller); _cfPoller = null; }
     }
 
     function disconnectCF() {
-        const iframe      = document.getElementById('cfIframe');
-        const img         = document.getElementById('liveFeedImg');
-        const badge       = document.getElementById('liveBadge');
-        const errorBar    = document.getElementById('cfErrorBar');
+        cfMode = false; _cfUrl = ''; _cfErrors = 0;
+        _stopCFPoller();
 
-        cfMode = false; _cfUrl = '';
-        iframe.onload = null; iframe.onerror = null;
-        iframe.src           = '';
-        iframe.style.display = 'none';
-        errorBar.classList.remove('visible');
+        const img      = document.getElementById('liveFeedImg');
+        const badge    = document.getElementById('liveBadge');
+        const errorBar = document.getElementById('cfErrorBar');
+        const placeholder = document.getElementById('feedPlaceholder');
 
-        img.style.display = 'block';
+        img.src = '';
+        img.style.display = 'none';
         badge.classList.remove('visible');
+        errorBar.classList.remove('visible');
+        placeholder.style.display = 'flex';
         showToast('Stream disconnected.');
     }
 
-    // Opens the CF URL in a new tab as fallback when iframe is blocked
+    // Opens the CF URL in a new tab as fallback
     function openCFInNewTab() {
         if (_cfUrl) window.open(_cfUrl, '_blank');
     }
 
-    // ── FIX: Collapse = MINIMIZE (shows a thin bar), NOT full hide ──
+    // ── Collapse / Expand ──
     let feedCollapsed = false;
     function toggleFeedCollapse() {
-        const viewport    = document.getElementById('feedViewport');
-        const urlBar      = document.getElementById('cfUrlBar');
-        const miniBar     = document.getElementById('feedMinimizedBar');
-        const icon        = document.getElementById('collapseIcon');
-        const label       = document.getElementById('collapseBtnLabel');
+        const viewport = document.getElementById('feedViewport');
+        const urlBar   = document.getElementById('cfUrlBar');
+        const miniBar  = document.getElementById('feedMinimizedBar');
+        const icon     = document.getElementById('collapseIcon');
+        const label    = document.getElementById('collapseBtnLabel');
 
         feedCollapsed = !feedCollapsed;
-
         if (feedCollapsed) {
-            // Minimize: collapse the viewport, hide the URL bar, show the mini bar
             viewport.classList.add('collapsed');
             urlBar.classList.add('hidden');
             miniBar.classList.add('visible');
-            icon.className  = 'fas fa-expand-alt';
+            icon.className    = 'fas fa-expand-alt';
             label.textContent = 'EXPAND';
         } else {
-            // Restore
             viewport.classList.remove('collapsed');
             urlBar.classList.remove('hidden');
             miniBar.classList.remove('visible');
-            icon.className  = 'fas fa-compress-alt';
+            icon.className    = 'fas fa-compress-alt';
             label.textContent = 'MINIMIZE';
         }
     }
 
-    // ── Default polling feed ──
-    let cfMode_ref = () => cfMode;
+    // ── Default polling feed (Railway /viewer_frame — used when no CF URL set) ──
     async function initLiveFeed() {
         const img         = document.getElementById('liveFeedImg');
         const placeholder = document.getElementById('feedPlaceholder');
         let lastSeq = -1, hasFrame = false;
 
         async function pollFrame() {
-            if (cfMode) { setTimeout(pollFrame, 1000); return; }
+            if (cfMode) { setTimeout(pollFrame, 1000); return; } // CF poller handles this
             try {
                 const resp = await fetch('/viewer_frame', { credentials: 'include' });
                 if (resp.ok) {
