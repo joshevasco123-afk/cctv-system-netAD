@@ -3,6 +3,7 @@ from database.models import db, LoginLog, CameraLog, AlertLog, ActivityLog, Bloc
 from functools import wraps
 from datetime import datetime, date
 from sqlalchemy import func
+import os
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -104,4 +105,5 @@ def dashboard():
                            active_sessions=active_sessions,
                            active_cameras=active_cameras,
                            alerts_today=alerts_today,
-                           suspicious_today=suspicious_today)
+                           suspicious_today=suspicious_today,
+                           stream_url=os.environ.get("STREAM_URL", ""))
