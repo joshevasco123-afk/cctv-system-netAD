@@ -7,233 +7,110 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f9fbf9; min-height: 100vh; }
+        .app-wrapper { max-width: 1440px; margin: 0 auto; width: 100%; background: #ffffff; min-height: 100vh; }
 
-        body {
-            background: #f9fbf9;
-            min-height: 100vh;
-        }
-
-        .app-wrapper {
-            max-width: 1440px;
-            margin: 0 auto;
-            width: 100%;
-            background: #ffffff;
-            min-height: 100vh;
-        }
-
-        /* Top bar */
         .top-bar {
-            background: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e2efe2;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            background: white; padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #e2efe2; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            flex-wrap: wrap; gap: 0.5rem;
         }
-
-        .logo-area h2 {
-            font-weight: 600;
-            color: #1e3a2f;
-            font-size: 1.5rem;
-            letter-spacing: -0.2px;
-        }
-
-        .logo-area span {
-            font-size: 0.75rem;
-            color: #4c8b4c;
-            font-weight: 500;
-        }
-
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .welcome-text {
-            font-size: 0.85rem;
-            color: #4a6a4a;
-            font-weight: 500;
-        }
-
+        .logo-area h2 { font-weight: 600; color: #1e3a2f; font-size: 1.5rem; letter-spacing: -0.2px; }
+        .logo-area span { font-size: 0.75rem; color: #4c8b4c; font-weight: 500; }
+        .top-bar-right { display: flex; align-items: center; gap: 1rem; }
+        .welcome-text { font-size: 0.85rem; color: #4a6a4a; font-weight: 500; }
         .logout-btn {
-            background: transparent;
-            border: 1.5px solid #cfdfcf;
-            padding: 0.5rem 1.2rem;
-            border-radius: 40px;
-            font-weight: 500;
-            color: #2c5e2c;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            font-size: 0.9rem;
+            background: transparent; border: 1.5px solid #cfdfcf; padding: 0.5rem 1.2rem;
+            border-radius: 40px; font-weight: 500; color: #2c5e2c; cursor: pointer;
+            transition: 0.2s; display: flex; align-items: center; gap: 8px;
+            text-decoration: none; font-size: 0.9rem;
         }
+        .logout-btn:hover { background: #eef5ee; border-color: #2e7d32; }
 
-        .logout-btn:hover {
-            background: #eef5ee;
-            border-color: #2e7d32;
-        }
-
-        /* Nav tabs */
         .nav-tabs {
-            display: flex;
-            gap: 0.5rem;
-            padding: 0.75rem 2rem;
-            background: white;
-            border-bottom: 1px solid #eef3ee;
+            display: flex; gap: 0.5rem; padding: 0.75rem 2rem;
+            background: white; border-bottom: 1px solid #eef3ee;
         }
-
         .nav-btn {
-            background: none;
-            border: none;
-            padding: 0.6rem 1.4rem;
-            font-weight: 500;
-            border-radius: 40px;
-            color: #5a6e5a;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.9rem;
+            background: none; border: none; padding: 0.6rem 1.4rem; font-weight: 500;
+            border-radius: 40px; color: #5a6e5a; cursor: pointer; transition: 0.2s; font-size: 0.9rem;
         }
+        .nav-btn.active { background: #eaf6ea; color: #1e5a1e; font-weight: 600; }
+        .nav-btn i { margin-right: 6px; }
 
-        .nav-btn.active {
-            background: #eaf6ea;
-            color: #1e5a1e;
-            font-weight: 600;
-        }
-
-        .nav-btn i {
-            margin-right: 6px;
-        }
-
-        /* Content */
-        .content-area {
-            padding: 2rem;
-        }
+        .content-area { padding: 2rem; }
 
         /* ── LIVE FEED ── */
         .live-feed-main {
-            background: #0d1f0d;
-            border-radius: 20px;
-            overflow: hidden;
-            margin-bottom: 1.5rem;
-            border: 1px solid #2a4a2a;
+            background: #0d1f0d; border-radius: 20px; overflow: hidden;
+            margin-bottom: 1.5rem; border: 1px solid #2a4a2a;
         }
-
         .live-feed-header {
-            display: flex;
-            justify-content: space-between;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 1.2rem; background: #162316;
+        }
+        .live-feed-header h3 { color: #c2f0c2; font-size: 0.95rem; font-weight: 600; }
+        .live-indicator { display: flex; align-items: center; gap: 6px; color: #4caf50; font-size: 0.8rem; font-weight: 600; }
+        .live-dot { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* ── MINIMIZED BAR (shown when collapsed) ── */
+        .feed-minimized-bar {
+            display: none;
             align-items: center;
-            padding: 0.8rem 1.2rem;
-            background: #162316;
+            justify-content: space-between;
+            padding: 0.6rem 1.2rem;
+            background: #0f1a0f;
+            border-top: 1px solid #1e3a1e;
         }
-
-        .live-feed-header h3 {
-            color: #c2f0c2;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .live-indicator {
+        .feed-minimized-bar .mini-label {
+            color: #4a7a4a;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #4caf50;
-            font-size: 0.8rem;
-            font-weight: 600;
         }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #4caf50;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        .feed-minimized-bar.visible { display: flex; }
 
         /* ── FEED VIEWPORT ── */
         .feed-viewport {
-            position: relative;
-            width: 100%;
-            background: #060f06;
-            min-height: 280px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; width: 100%; background: #060f06;
+            min-height: 280px; display: flex; align-items: center;
+            justify-content: center; overflow: hidden;
+            /* FIX: smooth collapse transition */
+            transition: max-height 0.35s ease, min-height 0.35s ease;
+        }
+
+        /* FIX: collapsed = minimized (small strip), NOT fully hidden */
+        .feed-viewport.collapsed {
+            max-height: 0 !important;
+            min-height: 0 !important;
             overflow: hidden;
         }
 
-        .live-feed-img {
-            width: 100%;
-            max-height: 420px;
-            object-fit: cover;
-            display: block;
-        }
+        .live-feed-img { width: 100%; max-height: 420px; object-fit: cover; display: block; }
 
-        /* Cloudflare iframe */
+        /* ── FIX: iframe with sandbox allowing scripts for CF tunnels ── */
         .cf-iframe {
-            width: 100%;
-            height: 420px;
-            border: none;
-            display: block;
+            width: 100%; height: 420px; border: none; display: block;
         }
 
-        /* "LIVE" badge overlay (top-left of viewport) */
         .live-badge-overlay {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #e53935;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            padding: 0.22rem 0.6rem;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            z-index: 10;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
+            position: absolute; top: 12px; left: 12px;
+            background: #e53935; color: white; font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 1px; padding: 0.22rem 0.6rem; border-radius: 6px;
+            display: flex; align-items: center; gap: 5px; z-index: 10;
+            pointer-events: none; opacity: 0; transition: opacity 0.3s;
         }
+        .live-badge-overlay.visible { opacity: 1; }
+        .live-badge-overlay .dot { width: 6px; height: 6px; background: white; border-radius: 50%; animation: pulse 1.2s infinite; }
 
-        .live-badge-overlay.visible {
-            opacity: 1;
-        }
-
-        .live-badge-overlay .dot {
-            width: 6px;
-            height: 6px;
-            background: white;
-            border-radius: 50%;
-            animation: pulse 1.2s infinite;
-        }
-
-        /* Collapse button overlay (top-right) */
-        .collapse-btn-overlay {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(30, 50, 30, 0.75);
-            border: 1px solid rgba(100, 200, 100, 0.25);
+        /* ── FIX: collapse button moved OUT of viewport into the header ── */
+        .collapse-btn-header {
+            background: rgba(30, 50, 30, 0.6);
+            border: 1px solid rgba(100, 200, 100, 0.2);
             color: #a0e0a0;
             font-size: 0.72rem;
             font-weight: 600;
@@ -244,531 +121,139 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            z-index: 10;
             transition: background 0.2s;
-            backdrop-filter: blur(4px);
         }
+        .collapse-btn-header:hover { background: rgba(46, 125, 50, 0.85); color: white; }
 
-        .collapse-btn-overlay:hover {
-            background: rgba(46, 125, 50, 0.85);
-            color: white;
-        }
-
-        /* Placeholder when no stream */
         .feed-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            color: #3a6a3a;
-            padding: 3rem 1rem;
-            width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 0.6rem; color: #3a6a3a; padding: 3rem 1rem; width: 100%;
         }
+        .feed-placeholder i { font-size: 2.5rem; opacity: 0.4; }
+        .feed-placeholder p { font-size: 0.82rem; opacity: 0.5; }
 
-        .feed-placeholder i {
-            font-size: 2.5rem;
-            opacity: 0.4;
-        }
-
-        .feed-placeholder p {
-            font-size: 0.82rem;
-            opacity: 0.5;
-        }
-
-        /* ── CF URL INPUT BAR ── */
+        /* ── CF URL BAR ── */
         .cf-url-bar {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            background: #0f1f0f;
-            border-top: 1px solid #1e3a1e;
-            padding: 0.55rem 0.7rem;
+            display: flex; align-items: center; gap: 0;
+            background: #0f1f0f; border-top: 1px solid #1e3a1e; padding: 0.55rem 0.7rem;
+            transition: 0.3s;
         }
+        .cf-url-bar.hidden { display: none; }
 
         .cf-url-input {
-            flex: 1;
-            background: #1a2e1a;
-            border: 1px solid #2a4a2a;
-            border-right: none;
-            border-radius: 8px 0 0 8px;
-            color: #c2f0c2;
-            font-size: 0.82rem;
-            font-family: monospace;
-            padding: 0.55rem 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
+            flex: 1; background: #1a2e1a; border: 1px solid #2a4a2a; border-right: none;
+            border-radius: 8px 0 0 8px; color: #c2f0c2; font-size: 0.82rem; font-family: monospace;
+            padding: 0.55rem 0.9rem; outline: none; transition: border-color 0.2s;
         }
-
-        .cf-url-input::placeholder {
-            color: #3a6a3a;
-        }
-
-        .cf-url-input:focus {
-            border-color: #4caf50;
-            background: #1e361e;
-        }
+        .cf-url-input::placeholder { color: #3a6a3a; }
+        .cf-url-input:focus { border-color: #4caf50; background: #1e361e; }
 
         .cf-connect-btn {
-            background: #2e7d32;
-            color: white;
-            border: none;
-            padding: 0.55rem 1.1rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-            white-space: nowrap;
+            background: #2e7d32; color: white; border: none; padding: 0.55rem 1.1rem;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 0.3px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: background 0.2s; white-space: nowrap;
         }
-
-        .cf-connect-btn:hover {
-            background: #388e3c;
-        }
+        .cf-connect-btn:hover { background: #388e3c; }
 
         .cf-disc-btn {
-            background: #c62828;
-            color: white;
-            border: none;
-            padding: 0.55rem 1.1rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            cursor: pointer;
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-            white-space: nowrap;
+            background: #c62828; color: white; border: none; padding: 0.55rem 1.1rem;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 0.3px; cursor: pointer;
+            border-radius: 0 8px 8px 0; display: flex; align-items: center; gap: 6px;
+            transition: background 0.2s; white-space: nowrap;
         }
+        .cf-disc-btn:hover { background: #b71c1c; }
 
-        .cf-disc-btn:hover {
-            background: #b71c1c;
+        /* ── CF Error banner ── */
+        .cf-error-bar {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #1a0a0a;
+            border-top: 1px solid #4a1a1a;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: #f87171;
         }
+        .cf-error-bar.visible { display: flex; }
+        .cf-error-bar a { color: #fca5a5; font-weight: 600; text-decoration: underline; cursor: pointer; }
 
         /* Stats */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.2rem;
-            border: 1px solid #e2efe2;
-            text-align: center;
-        }
-
-        .stat-card .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e5a1e;
-        }
-
-        .stat-card .stat-label {
-            font-size: 0.8rem;
-            color: #5a6e5a;
-            margin-top: 0.3rem;
-        }
-
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: white; border-radius: 16px; padding: 1.2rem; border: 1px solid #e2efe2; text-align: center; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: #1e5a1e; }
+        .stat-card .stat-label { font-size: 0.8rem; color: #5a6e5a; margin-top: 0.3rem; }
         .stat-card.danger .stat-value { color: #c62828; }
         .stat-card.warning .stat-value { color: #e65100; }
 
-        /* Device grid */
-        .device-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .device-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.2rem;
-            border: 1px solid #e2efe2;
-        }
-
-        .device-card h4 {
-            font-size: 0.9rem;
-            color: #1e3a1e;
-            margin-bottom: 0.5rem;
-        }
-
-        .device-card h4 i {
-            margin-right: 6px;
-            color: #2e7d32;
-        }
-
-        .device-status {
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-
+        .device-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .device-card { background: white; border-radius: 16px; padding: 1.2rem; border: 1px solid #e2efe2; }
+        .device-card h4 { font-size: 0.9rem; color: #1e3a1e; margin-bottom: 0.5rem; }
+        .device-card h4 i { margin-right: 6px; color: #2e7d32; }
+        .device-status { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; }
         .device-status.online { color: #2e7d32; }
         .device-status i { margin-right: 4px; }
+        .device-card small { color: #7a8a7a; font-size: 0.75rem; }
+        .stat-block { background: white; border-radius: 16px; padding: 1.2rem; border: 1px solid #e2efe2; font-size: 0.85rem; color: #3a5a3a; }
+        .stat-block hr { border: none; border-top: 1px solid #e2efe2; margin: 0.7rem 0; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; color: #1e5a1e; margin: 0.3rem 0; }
 
-        .device-card small {
-            color: #7a8a7a;
-            font-size: 0.75rem;
-        }
-
-        .stat-block {
-            background: white;
-            border-radius: 16px;
-            padding: 1.2rem;
-            border: 1px solid #e2efe2;
-            font-size: 0.85rem;
-            color: #3a5a3a;
-        }
-
-        .stat-block hr {
-            border: none;
-            border-top: 1px solid #e2efe2;
-            margin: 0.7rem 0;
-        }
-
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1e5a1e;
-            margin: 0.3rem 0;
-        }
-
-        /* Alert section */
-        .alerts-section {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #e2efe2;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-        }
-
-        .alerts-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.2rem;
-            background: #fafef7;
-            border-bottom: 1px solid #e2efe2;
-        }
-
-        .alerts-header h3 {
-            font-size: 0.95rem;
-            color: #1e3a1e;
-            font-weight: 600;
-        }
-
-        .alert-badge {
-            background: #c62828;
-            color: white;
-            border-radius: 20px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .alert-badge.zero {
-            background: #e8f5e8;
-            color: #2e7d32;
-        }
-
-        .alert-item {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.8rem 1.2rem;
-            border-bottom: 1px solid #f0f7f0;
-            font-size: 0.85rem;
-        }
-
+        .alerts-section { background: white; border-radius: 16px; border: 1px solid #e2efe2; margin-bottom: 1.5rem; overflow: hidden; }
+        .alerts-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: #fafef7; border-bottom: 1px solid #e2efe2; }
+        .alerts-header h3 { font-size: 0.95rem; color: #1e3a1e; font-weight: 600; }
+        .alert-badge { background: #c62828; color: white; border-radius: 20px; padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: 700; }
+        .alert-badge.zero { background: #e8f5e8; color: #2e7d32; }
+        .alert-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; border-bottom: 1px solid #f0f7f0; font-size: 0.85rem; }
         .alert-item:last-child { border-bottom: none; }
-
-        .alert-severity {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
+        .alert-severity { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .alert-severity.high { background: #c62828; }
         .alert-severity.medium { background: #e65100; }
         .alert-severity.low { background: #2e7d32; }
-
         .alert-type { font-weight: 600; color: #1e3a1e; }
         .alert-desc { color: #5a6e5a; font-size: 0.8rem; }
         .alert-time { margin-left: auto; color: #7a8a7a; font-size: 0.75rem; white-space: nowrap; }
+        .no-alerts { padding: 1.5rem; text-align: center; color: #7a8a7a; font-size: 0.85rem; }
 
-        .no-alerts {
-            padding: 1.5rem;
-            text-align: center;
-            color: #7a8a7a;
-            font-size: 0.85rem;
-        }
+        .blocked-ips-list { margin-top: 0.4rem; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+        .ip-pill { background: #ffe9e9; color: #c62828; border-radius: 20px; padding: 0.15rem 0.6rem; font-size: 0.72rem; font-weight: 600; }
 
-        /* Blocked IPs pill list */
-        .blocked-ips-list {
-            margin-top: 0.4rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-        }
+        .btn-block-ip { background: #ffe9e9; color: #c62828; border: 1.5px solid #fbb; border-radius: 20px; padding: 0.22rem 0.7rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-block-ip:hover { background: #c62828; color: white; border-color: #c62828; }
+        .btn-block-ip:disabled { background: #f5f5f5; color: #aaa; border-color: #ddd; cursor: default; }
+        .already-blocked-tag { background: #f5f5f5; color: #999; border-radius: 20px; padding: 0.22rem 0.7rem; font-size: 0.75rem; font-weight: 600; }
+        .btn-unblock-ip { background: #e8f5e8; color: #2e7d32; border: 1.5px solid #b2dfdb; border-radius: 20px; padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-unblock-ip:hover { background: #2e7d32; color: white; border-color: #2e7d32; }
 
-        .ip-pill {
-            background: #ffe9e9;
-            color: #c62828;
-            border-radius: 20px;
-            padding: 0.15rem 0.6rem;
-            font-size: 0.72rem;
-            font-weight: 600;
-        }
-
-        .btn-block-ip {
-            background: #ffe9e9;
-            color: #c62828;
-            border: 1.5px solid #fbb;
-            border-radius: 20px;
-            padding: 0.22rem 0.7rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-block-ip:hover {
-            background: #c62828;
-            color: white;
-            border-color: #c62828;
-        }
-
-        .btn-block-ip:disabled {
-            background: #f5f5f5;
-            color: #aaa;
-            border-color: #ddd;
-            cursor: default;
-        }
-
-        .already-blocked-tag {
-            background: #f5f5f5;
-            color: #999;
-            border-radius: 20px;
-            padding: 0.22rem 0.7rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .btn-unblock-ip {
-            background: #e8f5e8;
-            color: #2e7d32;
-            border: 1.5px solid #b2dfdb;
-            border-radius: 20px;
-            padding: 0.3rem 0.8rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-unblock-ip:hover {
-            background: #2e7d32;
-            color: white;
-            border-color: #2e7d32;
-        }
-
-        /* Settings */
-        .settings-placeholder {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #5a6e5a;
-        }
-
-        .blocked-ips-card {
-            max-width: 600px;
-            margin: 0 auto 2rem auto;
-            background: white;
-            border-radius: 20px;
-            border: 1px solid #fdd;
-            box-shadow: 0 2px 8px rgba(198,40,40,0.05);
-            overflow: hidden;
-        }
-
-        .blocked-ips-card-header {
-            background: #fff5f5;
-            padding: 1rem 1.4rem;
-            border-bottom: 1px solid #fdd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .blocked-ips-card-header h3 {
-            color: #c62828;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .blocked-count-badge {
-            background: #c62828;
-            color: white;
-            border-radius: 20px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .blocked-count-badge.zero {
-            background: #e8f5e8;
-            color: #2e7d32;
-        }
-
-        .blocked-ip-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1.4rem;
-            border-bottom: 1px solid #fef5f5;
-            font-size: 0.88rem;
-        }
-
+        .settings-placeholder { text-align: center; padding: 4rem 2rem; color: #5a6e5a; }
+        .blocked-ips-card { max-width: 600px; margin: 0 auto 2rem auto; background: white; border-radius: 20px; border: 1px solid #fdd; box-shadow: 0 2px 8px rgba(198,40,40,0.05); overflow: hidden; }
+        .blocked-ips-card-header { background: #fff5f5; padding: 1rem 1.4rem; border-bottom: 1px solid #fdd; display: flex; justify-content: space-between; align-items: center; }
+        .blocked-ips-card-header h3 { color: #c62828; font-size: 0.95rem; font-weight: 600; }
+        .blocked-count-badge { background: #c62828; color: white; border-radius: 20px; padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: 700; }
+        .blocked-count-badge.zero { background: #e8f5e8; color: #2e7d32; }
+        .blocked-ip-row { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.4rem; border-bottom: 1px solid #fef5f5; font-size: 0.88rem; }
         .blocked-ip-row:last-child { border-bottom: none; }
+        .blocked-ip-info { display: flex; flex-direction: column; gap: 0.15rem; }
+        .blocked-ip-addr { font-weight: 600; color: #c62828; font-family: monospace; font-size: 0.9rem; }
+        .blocked-ip-meta { font-size: 0.75rem; color: #9a7a7a; }
+        .no-blocked-msg { padding: 1.5rem; text-align: center; color: #7a8a7a; font-size: 0.85rem; }
 
-        .blocked-ip-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.15rem;
-        }
+        footer { text-align: center; padding: 1.5rem; font-size: 0.8rem; color: #7a8a7a; border-top: 1px solid #eef3ee; margin-top: 1rem; }
 
-        .blocked-ip-addr {
-            font-weight: 600;
-            color: #c62828;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-
-        .blocked-ip-meta {
-            font-size: 0.75rem;
-            color: #9a7a7a;
-        }
-
-        .no-blocked-msg {
-            padding: 1.5rem;
-            text-align: center;
-            color: #7a8a7a;
-            font-size: 0.85rem;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            font-size: 0.8rem;
-            color: #7a8a7a;
-            border-top: 1px solid #eef3ee;
-            margin-top: 1rem;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
-
-        .confirm-modal {
-            background: white;
-            border-radius: 24px;
-            padding: 2rem;
-            max-width: 360px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-
-        .confirm-modal i {
-            font-size: 2.5rem;
-            color: #2e7d32;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
+        .confirm-modal { background: white; border-radius: 24px; padding: 2rem; max-width: 360px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .confirm-modal i { font-size: 2.5rem; color: #2e7d32; margin-bottom: 1rem; display: block; }
         .confirm-modal h3 { color: #1a2e1f; margin-bottom: 0.5rem; }
         .confirm-modal p { color: #5a6e5a; font-size: 0.9rem; margin-bottom: 1.5rem; }
-
-        .modal-buttons {
-            display: flex;
-            gap: 0.8rem;
-            justify-content: center;
-        }
-
-        .modal-btn {
-            padding: 0.7rem 1.5rem;
-            border-radius: 40px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: 0.2s;
-        }
-
+        .modal-buttons { display: flex; gap: 0.8rem; justify-content: center; }
+        .modal-btn { padding: 0.7rem 1.5rem; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
         .modal-confirm { background: #c62828; color: white; }
         .modal-confirm:hover { background: #b71c1c; }
         .modal-cancel { background: #eef5ee; color: #2c5e2c; border: 1.5px solid #cfdfcf; }
         .modal-cancel:hover { background: #dff0df; }
 
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            background: #1e3a1e;
-            color: white;
-            padding: 0.75rem 1.2rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            z-index: 2000;
-            transform: translateY(80px);
-            opacity: 0;
-            transition: 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.error {
-            background: #c62828;
-        }
-
-        /* Feed collapsed state */
-        .feed-viewport.collapsed {
-            max-height: 0;
-            min-height: 0;
-            overflow: hidden;
-        }
-        .cf-url-bar.collapsed {
-            display: none;
-        }
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1e3a1e; color: white; padding: 0.75rem 1.2rem; border-radius: 12px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 2000; transform: translateY(80px); opacity: 0; transition: 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { background: #c62828; }
     </style>
 </head>
 <body>
@@ -790,58 +275,70 @@
 
     <!-- Nav Tabs -->
     <div class="nav-tabs">
-        <button class="nav-btn active" id="liveViewTab">
-            <i class="fas fa-video"></i> Live View
-        </button>
-        <button class="nav-btn" id="logsTab">
-            <i class="fas fa-list"></i> Logs
-        </button>
-        <button class="nav-btn" id="settingsTab">
-            <i class="fas fa-cog"></i> Settings
-        </button>
+        <button class="nav-btn active" id="liveViewTab"><i class="fas fa-video"></i> Live View</button>
+        <button class="nav-btn" id="logsTab"><i class="fas fa-list"></i> Logs</button>
+        <button class="nav-btn" id="settingsTab"><i class="fas fa-cog"></i> Settings</button>
     </div>
 
-    <!-- Content -->
     <div class="content-area">
 
         <!-- ==================== LIVE PANEL ==================== -->
         <div id="livePanel">
 
-            <!-- Main Live Feed -->
             <div class="live-feed-main">
+                <!-- 
+                    FIX 2: Collapse button moved HERE into the header (outside feed-viewport).
+                    This way it is ALWAYS visible even when the feed is collapsed.
+                -->
                 <div class="live-feed-header">
                     <h3><i class="fas fa-map-marker-alt" style="color:#4caf50; margin-right:6px;"></i>Main Entrance — Camera 01</h3>
-                    <div class="live-indicator">
-                        <div class="live-dot"></div> LIVE
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                        <!-- Collapse/Expand button in header so it's always reachable -->
+                        <button class="collapse-btn-header" id="collapseBtn" onclick="toggleFeedCollapse()">
+                            <i class="fas fa-compress-alt" id="collapseIcon"></i>
+                            <span id="collapseBtnLabel">MINIMIZE</span>
+                        </button>
+                        <div class="live-indicator">
+                            <div class="live-dot"></div> LIVE
+                        </div>
                     </div>
                 </div>
 
-                <!-- Feed viewport -->
+                <!-- Feed viewport — collapses/expands, NOT the button -->
                 <div class="feed-viewport" id="feedViewport">
-                    <!-- LIVE badge overlay -->
                     <div class="live-badge-overlay" id="liveBadge">
                         <span class="dot"></span> LIVE
                     </div>
 
-                    <!-- Collapse button overlay -->
-                    <button class="collapse-btn-overlay" id="collapseBtn" onclick="toggleFeedCollapse()">
-                        <i class="fas fa-compress-alt"></i> COLLAPSE
-                    </button>
+                    <img id="liveFeedImg" class="live-feed-img" src="" alt="Live Feed" style="display:none;">
 
-                    <!-- Default polling feed (hidden when CF is active) -->
-                    <img id="liveFeedImg" class="live-feed-img" src="" alt="Live Feed">
+                    <!-- 
+                        FIX 1: Cloudflare iframe with allow attribute for modern permissions.
+                        sandbox="allow-scripts allow-same-origin allow-forms" lets CF tunnel pages load.
+                        referrerpolicy="no-referrer" reduces blocked-referer rejections.
+                    -->
+                    <iframe
+                        id="cfIframe"
+                        class="cf-iframe"
+                        style="display:none;"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                        referrerpolicy="no-referrer"
+                        allowfullscreen
+                    ></iframe>
 
-                    <!-- Cloudflare iframe (hidden until connected) -->
-                    <iframe id="cfIframe" class="cf-iframe" style="display:none;" allowfullscreen></iframe>
-
-                    <!-- Placeholder shown when no stream at all -->
                     <div class="feed-placeholder" id="feedPlaceholder">
                         <i class="fas fa-video-slash"></i>
                         <p>Paste a Cloudflare tunnel URL below and press CONNECT</p>
                     </div>
                 </div>
 
-                <!-- Cloudflare URL input bar -->
+                <!-- FIX 1: Error/fallback banner shown if iframe fails to load -->
+                <div class="cf-error-bar" id="cfErrorBar">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Stream blocked by browser or server. <a onclick="openCFInNewTab()">Open in new tab ↗</a> or check that the tunnel server sends <code>X-Frame-Options: ALLOWALL</code>.</span>
+                </div>
+
+                <!-- CF URL input bar (hidden when collapsed) -->
                 <div class="cf-url-bar" id="cfUrlBar">
                     <input
                         type="text"
@@ -856,6 +353,14 @@
                     </button>
                     <button class="cf-disc-btn" onclick="disconnectCF()">
                         <i class="fas fa-times"></i> DISC
+                    </button>
+                </div>
+
+                <!-- Minimized bar shown when feed is collapsed -->
+                <div class="feed-minimized-bar" id="feedMinimizedBar">
+                    <span class="mini-label"><i class="fas fa-video-slash"></i> Feed minimized</span>
+                    <button class="collapse-btn-header" onclick="toggleFeedCollapse()" style="font-size:0.7rem; padding:0.22rem 0.6rem;">
+                        <i class="fas fa-expand-alt"></i> EXPAND
                     </button>
                 </div>
             </div>
@@ -892,7 +397,6 @@
                 </div>
             </div>
 
-            <!-- Blocked IPs list (only if any) -->
             {% if blocked_ips_list %}
             <div style="background:#fff5f5; border:1px solid #fdd; border-radius:14px; padding:1rem 1.2rem; margin-bottom:1.5rem;">
                 <div style="font-size:0.85rem; font-weight:600; color:#c62828; margin-bottom:0.5rem;">
@@ -906,13 +410,10 @@
             </div>
             {% endif %}
 
-            <!-- AI Alerts Section -->
             <div class="alerts-section">
                 <div class="alerts-header">
                     <h3><i class="fas fa-bell" style="color:#e65100; margin-right:8px;"></i>AI Alerts</h3>
-                    <span class="alert-badge {% if alerts_today == 0 %}zero{% endif %}">
-                        {{ alerts_today }} today
-                    </span>
+                    <span class="alert-badge {% if alerts_today == 0 %}zero{% endif %}">{{ alerts_today }} today</span>
                 </div>
                 {% if recent_alerts %}
                     {% for alert in recent_alerts %}
@@ -920,9 +421,7 @@
                         <div class="alert-severity {{ alert.severity }}"></div>
                         <div>
                             <div class="alert-type">{{ alert.alert_type | replace('_', ' ') | title }}</div>
-                            {% if alert.description %}
-                            <div class="alert-desc">{{ alert.description }}</div>
-                            {% endif %}
+                            {% if alert.description %}<div class="alert-desc">{{ alert.description }}</div>{% endif %}
                         </div>
                         <div class="alert-time">{{ alert.timestamp.strftime('%H:%M:%S') }}</div>
                     </div>
@@ -935,7 +434,6 @@
                 {% endif %}
             </div>
 
-            <!-- Device Grid -->
             <div class="device-grid">
                 <div class="device-card">
                     <h4><i class="fas fa-network-wired"></i> Network Switch</h4>
@@ -969,7 +467,6 @@
 
         <!-- ==================== LOGS PANEL ==================== -->
         <div id="logsPanel" style="display:none;">
-
             <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
                 <select id="filterRole" style="padding:0.5rem 1rem; border-radius:20px; border:1.5px solid #cfdfcf; font-size:0.85rem; outline:none;">
                     <option value="all">All Roles</option>
@@ -1006,13 +503,9 @@
                             <td style="padding:0.7rem 1rem; color:#4a6a4a; font-family:monospace;">{{ log.ip_address }}</td>
                             <td style="padding:0.7rem 1rem;">
                                 {% if log.status == 'success' %}
-                                    <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
-                                        <i class="fas fa-check-circle"></i> Success
-                                    </span>
+                                    <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;"><i class="fas fa-check-circle"></i> Success</span>
                                 {% else %}
-                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
-                                        <i class="fas fa-times-circle"></i> Failed
-                                    </span>
+                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;"><i class="fas fa-times-circle"></i> Failed</span>
                                 {% endif %}
                             </td>
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
@@ -1021,24 +514,18 @@
                                     {% if log.ip_address in blocked_ips_set %}
                                         <span class="already-blocked-tag"><i class="fas fa-ban"></i> Blocked</span>
                                     {% else %}
-                                        <button class="btn-block-ip"
-                                                onclick="confirmBlockIP('{{ log.ip_address }}', this)">
-                                            <i class="fas fa-ban"></i> Block IP
-                                        </button>
+                                        <button class="btn-block-ip" onclick="confirmBlockIP('{{ log.ip_address }}', this)"><i class="fas fa-ban"></i> Block IP</button>
                                     {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="6" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No login logs yet.</td>
-                        </tr>
+                        <tr><td colspan="6" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No login logs yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Camera Logs -->
             <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-video" style="color:#2e7d32; margin-right:8px;"></i>Camera Logs</h3>
             <div style="overflow-x:auto; margin-bottom:2rem;">
                 <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
@@ -1054,24 +541,17 @@
                         {% for log in camera_logs %}
                         <tr style="border-bottom:1px solid #eef3ee;">
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
-                            <td style="padding:0.7rem 1rem;">
-                                <span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
-                                    <i class="fas fa-circle" style="font-size:0.5rem;"></i> {{ log.event | capitalize }}
-                                </span>
-                            </td>
+                            <td style="padding:0.7rem 1rem;"><span style="background:#e8f5e8; color:#2e7d32; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600;"><i class="fas fa-circle" style="font-size:0.5rem;"></i> {{ log.event | capitalize }}</span></td>
                             <td style="padding:0.7rem 1rem; color:#4a6a4a; font-family:monospace;">{{ log.ip_address }}</td>
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="4" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No camera logs yet.</td>
-                        </tr>
+                        <tr><td colspan="4" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No camera logs yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Activity Logs -->
             <h3 style="color:#1e3a1e; margin-bottom:1rem; margin-top:1rem;">
                 <i class="fas fa-shield-alt" style="color:#1565c0; margin-right:8px;"></i>Activity Log
                 <span style="font-size:0.75rem; font-weight:400; color:#7a8a7a; margin-left:8px;">Admin actions & suspicious activity</span>
@@ -1093,13 +573,9 @@
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ loop.index }}</td>
                             <td style="padding:0.7rem 1rem;">
                                 {% if log.severity == 'suspicious' %}
-                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;">
-                                        <i class="fas fa-exclamation-triangle"></i> {{ log.event | replace('_', ' ') }}
-                                    </span>
+                                    <span style="background:#ffe9e9; color:#c62828; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;"><i class="fas fa-exclamation-triangle"></i> {{ log.event | replace('_', ' ') }}</span>
                                 {% else %}
-                                    <span style="background:#e8f0fe; color:#1565c0; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;">
-                                        <i class="fas fa-info-circle"></i> {{ log.event | replace('_', ' ') }}
-                                    </span>
+                                    <span style="background:#e8f0fe; color:#1565c0; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.78rem; font-weight:600;"><i class="fas fa-info-circle"></i> {{ log.event | replace('_', ' ') }}</span>
                                 {% endif %}
                             </td>
                             <td style="padding:0.7rem 1rem; color:#4a6a4a; font-size:0.82rem;">{{ log.description or '—' }}</td>
@@ -1107,15 +583,12 @@
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No activity recorded yet.</td>
-                        </tr>
+                        <tr><td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No activity recorded yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Alert Logs -->
             <h3 style="color:#1e3a1e; margin-bottom:1rem;"><i class="fas fa-bell" style="color:#e65100; margin-right:8px;"></i>AI Alert Logs</h3>
             <div style="overflow-x:auto;">
                 <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
@@ -1146,9 +619,7 @@
                             <td style="padding:0.7rem 1rem; color:#7a8a7a;">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No AI alerts yet.</td>
-                        </tr>
+                        <tr><td colspan="5" style="padding:1.5rem; text-align:center; color:#7a8a7a;">No AI alerts yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -1170,11 +641,8 @@
             <div class="blocked-ips-card">
                 <div class="blocked-ips-card-header">
                     <h3><i class="fas fa-ban" style="margin-right:8px;"></i>Blocked IP Addresses</h3>
-                    <span class="blocked-count-badge {% if blocked_ips_count == 0 %}zero{% endif %}">
-                        {{ blocked_ips_count }} blocked
-                    </span>
+                    <span class="blocked-count-badge {% if blocked_ips_count == 0 %}zero{% endif %}">{{ blocked_ips_count }} blocked</span>
                 </div>
-
                 {% if blocked_ips_db %}
                     {% for entry in blocked_ips_db %}
                     <div class="blocked-ip-row" id="blocked-row-{{ loop.index }}">
@@ -1186,55 +654,38 @@
                                 {% if entry.reason %} • {{ entry.reason }}{% endif %}
                             </span>
                         </div>
-                        <button class="btn-unblock-ip"
-                                onclick="unblockIP('{{ entry.ip_address }}', {{ loop.index }}, this)">
+                        <button class="btn-unblock-ip" onclick="unblockIP('{{ entry.ip_address }}', {{ loop.index }}, this)">
                             <i class="fas fa-unlock-alt"></i> Unblock
                         </button>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <div class="no-blocked-msg">
-                        <i class="fas fa-check-circle" style="color:#2e7d32; margin-right:6px;"></i>
-                        No IPs are currently blocked.
-                    </div>
+                    <div class="no-blocked-msg"><i class="fas fa-check-circle" style="color:#2e7d32; margin-right:6px;"></i>No IPs are currently blocked.</div>
                 {% endif %}
             </div>
             {% endif %}
 
             {% if session.get('role') == 'admin' %}
             <div style="max-width:420px; margin: 2rem auto; background:white; border-radius:20px; padding:2rem; border:1px solid #e2efe2; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                <h3 style="color:#1e3a1e; margin-bottom:0.3rem;">
-                    <i class="fas fa-user-plus" style="color:#2e7d32; margin-right:8px;"></i>Register New User
-                </h3>
+                <h3 style="color:#1e3a1e; margin-bottom:0.3rem;"><i class="fas fa-user-plus" style="color:#2e7d32; margin-right:8px;"></i>Register New User</h3>
                 <p style="font-size:0.8rem; color:#7a8a7a; margin-bottom:1.2rem;">Only admins can create accounts.</p>
-
                 {% if register_error %}
-                    <div style="background:#ffe9e9; color:#c62828; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; margin-bottom:1rem;">
-                        <i class="fas fa-exclamation-circle"></i> {{ register_error }}
-                    </div>
+                    <div style="background:#ffe9e9; color:#c62828; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; margin-bottom:1rem;"><i class="fas fa-exclamation-circle"></i> {{ register_error }}</div>
                 {% endif %}
                 {% if register_success %}
-                    <div style="background:#e8f5e8; color:#2e7d32; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; margin-bottom:1rem;">
-                        <i class="fas fa-check-circle"></i> {{ register_success }}
-                    </div>
+                    <div style="background:#e8f5e8; color:#2e7d32; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; margin-bottom:1rem;"><i class="fas fa-check-circle"></i> {{ register_success }}</div>
                 {% endif %}
-
                 <form method="POST" action="/register">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div style="margin-bottom:1rem;">
                         <label style="font-size:0.85rem; color:#3a5a3a; font-weight:500;">Username</label>
-                        <input name="username" required
-                            style="width:100%; margin-top:0.4rem; padding:0.65rem 1rem; border:1.5px solid #cfdfcf; border-radius:10px; font-size:0.9rem; outline:none;"
-                            placeholder="3-50 letters, numbers, underscores">
+                        <input name="username" required style="width:100%; margin-top:0.4rem; padding:0.65rem 1rem; border:1.5px solid #cfdfcf; border-radius:10px; font-size:0.9rem; outline:none;" placeholder="3-50 letters, numbers, underscores">
                     </div>
                     <div style="margin-bottom:1.2rem;">
                         <label style="font-size:0.85rem; color:#3a5a3a; font-weight:500;">Password</label>
-                        <input name="password" type="password" required
-                            style="width:100%; margin-top:0.4rem; padding:0.65rem 1rem; border:1.5px solid #cfdfcf; border-radius:10px; font-size:0.9rem; outline:none;"
-                            placeholder="Minimum 8 characters">
+                        <input name="password" type="password" required style="width:100%; margin-top:0.4rem; padding:0.65rem 1rem; border:1.5px solid #cfdfcf; border-radius:10px; font-size:0.9rem; outline:none;" placeholder="Minimum 8 characters">
                     </div>
-                    <button type="submit"
-                        style="width:100%; padding:0.75rem; background:#2e7d32; color:white; border:none; border-radius:40px; font-weight:600; font-size:0.95rem; cursor:pointer;">
+                    <button type="submit" style="width:100%; padding:0.75rem; background:#2e7d32; color:white; border:none; border-radius:40px; font-weight:600; font-size:0.95rem; cursor:pointer;">
                         <i class="fas fa-user-plus"></i> Create Account
                     </button>
                 </form>
@@ -1248,7 +699,7 @@
     </div>
 </div>
 
-<!-- ── LOGOUT CONFIRMATION MODAL ── -->
+<!-- LOGOUT MODAL -->
 <div id="logoutModal" class="modal-overlay">
     <div class="confirm-modal">
         <i class="fas fa-question-circle"></i>
@@ -1264,73 +715,52 @@
     </div>
 </div>
 
-<!-- ── BLOCK IP CONFIRMATION MODAL ── -->
+<!-- BLOCK IP MODAL -->
 <div id="blockIPModal" class="modal-overlay">
     <div class="confirm-modal">
         <i class="fas fa-ban" style="color:#c62828;"></i>
         <h3>Block this IP?</h3>
         <p>You are about to block <strong id="blockIPTarget" style="font-family:monospace; color:#c62828;"></strong>. This IP will be denied access immediately.</p>
         <div class="modal-buttons">
-            <button id="modalConfirmBlock" class="modal-btn modal-confirm">
-                <i class="fas fa-ban"></i> Yes, Block
-            </button>
+            <button id="modalConfirmBlock" class="modal-btn modal-confirm"><i class="fas fa-ban"></i> Yes, Block</button>
             <button id="modalCancelBlock" class="modal-btn modal-cancel">Cancel</button>
         </div>
     </div>
 </div>
 
-<!-- ── TOAST ── -->
 <div id="toast" class="toast"></div>
 
 <script>
     // ── Tab switching ──
-    const liveViewTab   = document.getElementById('liveViewTab');
-    const logsTab       = document.getElementById('logsTab');
-    const settingsTab   = document.getElementById('settingsTab');
-    const livePanel     = document.getElementById('livePanel');
-    const logsPanel     = document.getElementById('logsPanel');
-    const settingsPanel = document.getElementById('settingsPanel');
-
     function setActiveTab(tabName) {
-        livePanel.style.display     = 'none';
-        logsPanel.style.display     = 'none';
-        settingsPanel.style.display = 'none';
-        liveViewTab.classList.remove('active');
-        logsTab.classList.remove('active');
-        settingsTab.classList.remove('active');
-
+        document.getElementById('livePanel').style.display     = 'none';
+        document.getElementById('logsPanel').style.display     = 'none';
+        document.getElementById('settingsPanel').style.display = 'none';
+        document.getElementById('liveViewTab').classList.remove('active');
+        document.getElementById('logsTab').classList.remove('active');
+        document.getElementById('settingsTab').classList.remove('active');
         if (tabName === 'live') {
-            livePanel.style.display = 'block';
-            liveViewTab.classList.add('active');
+            document.getElementById('livePanel').style.display = 'block';
+            document.getElementById('liveViewTab').classList.add('active');
         } else if (tabName === 'logs') {
-            logsPanel.style.display = 'block';
-            logsTab.classList.add('active');
+            document.getElementById('logsPanel').style.display = 'block';
+            document.getElementById('logsTab').classList.add('active');
         } else {
-            settingsPanel.style.display = 'block';
-            settingsTab.classList.add('active');
+            document.getElementById('settingsPanel').style.display = 'block';
+            document.getElementById('settingsTab').classList.add('active');
         }
     }
-
-    liveViewTab.addEventListener('click',  () => { setActiveTab('live');     localStorage.setItem('activeTab', 'live'); });
-    logsTab.addEventListener('click',      () => { setActiveTab('logs');     localStorage.setItem('activeTab', 'logs'); });
-    settingsTab.addEventListener('click',  () => { setActiveTab('settings'); localStorage.setItem('activeTab', 'settings'); });
+    document.getElementById('liveViewTab').addEventListener('click',  () => { setActiveTab('live');     localStorage.setItem('activeTab','live'); });
+    document.getElementById('logsTab').addEventListener('click',      () => { setActiveTab('logs');     localStorage.setItem('activeTab','logs'); });
+    document.getElementById('settingsTab').addEventListener('click',  () => { setActiveTab('settings'); localStorage.setItem('activeTab','settings'); });
 
     // ── Logout modal ──
-    const logoutModal  = document.getElementById('logoutModal');
-    const logoutButton = document.getElementById('logoutButton');
-    const modalConfirm = document.getElementById('modalConfirmLogout');
-    const modalCancel  = document.getElementById('modalCancelLogout');
+    document.getElementById('logoutButton').addEventListener('click', () => document.getElementById('logoutModal').classList.add('active'));
+    document.getElementById('modalCancelLogout').addEventListener('click', () => document.getElementById('logoutModal').classList.remove('active'));
+    document.getElementById('logoutModal').addEventListener('click', (e) => { if (e.target === document.getElementById('logoutModal')) document.getElementById('logoutModal').classList.remove('active'); });
+    document.getElementById('modalConfirmLogout').addEventListener('click', () => document.getElementById('logoutForm').submit());
 
-    logoutButton.addEventListener('click', () => logoutModal.classList.add('active'));
-    modalCancel.addEventListener('click',  () => logoutModal.classList.remove('active'));
-    logoutModal.addEventListener('click', (e) => {
-        if (e.target === logoutModal) logoutModal.classList.remove('active');
-    });
-    modalConfirm.addEventListener('click', () => {
-        document.getElementById('logoutForm').submit();
-    });
-
-    // ── Toast helper ──
+    // ── Toast ──
     function showToast(msg, isError = false) {
         const toast = document.getElementById('toast');
         toast.innerHTML = (isError ? '<i class="fas fa-exclamation-circle"></i> ' : '<i class="fas fa-check-circle"></i> ') + msg;
@@ -1341,223 +771,183 @@
     }
 
     // ── Block IP modal ──
-    const blockIPModal        = document.getElementById('blockIPModal');
-    const blockIPTarget       = document.getElementById('blockIPTarget');
-    const modalConfirmBlock   = document.getElementById('modalConfirmBlock');
-    const modalCancelBlock    = document.getElementById('modalCancelBlock');
-
-    let _pendingBlockIP  = null;
-    let _pendingBlockBtn = null;
-
+    let _pendingBlockIP = null, _pendingBlockBtn = null;
     function confirmBlockIP(ip, btn) {
-        _pendingBlockIP  = ip;
-        _pendingBlockBtn = btn;
-        blockIPTarget.textContent = ip;
-        blockIPModal.classList.add('active');
+        _pendingBlockIP = ip; _pendingBlockBtn = btn;
+        document.getElementById('blockIPTarget').textContent = ip;
+        document.getElementById('blockIPModal').classList.add('active');
     }
-
-    modalCancelBlock.addEventListener('click', () => {
-        blockIPModal.classList.remove('active');
-        _pendingBlockIP  = null;
-        _pendingBlockBtn = null;
+    document.getElementById('modalCancelBlock').addEventListener('click', () => {
+        document.getElementById('blockIPModal').classList.remove('active');
+        _pendingBlockIP = _pendingBlockBtn = null;
     });
-
-    blockIPModal.addEventListener('click', (e) => {
-        if (e.target === blockIPModal) {
-            blockIPModal.classList.remove('active');
-            _pendingBlockIP  = null;
-            _pendingBlockBtn = null;
+    document.getElementById('blockIPModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('blockIPModal')) {
+            document.getElementById('blockIPModal').classList.remove('active');
+            _pendingBlockIP = _pendingBlockBtn = null;
         }
     });
-
-    modalConfirmBlock.addEventListener('click', async () => {
+    document.getElementById('modalConfirmBlock').addEventListener('click', async () => {
         if (!_pendingBlockIP) return;
-        blockIPModal.classList.remove('active');
-        const ip  = _pendingBlockIP;
-        const btn = _pendingBlockBtn;
-        _pendingBlockIP  = null;
-        _pendingBlockBtn = null;
-
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        }
-
+        document.getElementById('blockIPModal').classList.remove('active');
+        const ip = _pendingBlockIP, btn = _pendingBlockBtn;
+        _pendingBlockIP = _pendingBlockBtn = null;
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
         try {
-            const resp = await fetch('/blocked/block', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-                body: JSON.stringify({ ip_address: ip })
-            });
+            const resp = await fetch('/blocked/block', { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrfToken()}, body:JSON.stringify({ip_address:ip}) });
             const data = await resp.json();
-
             if (resp.ok && data.success) {
                 showToast('IP ' + ip + ' has been blocked.');
-                if (btn) {
-                    const tag = document.createElement('span');
-                    tag.className = 'already-blocked-tag';
-                    tag.innerHTML = '<i class="fas fa-ban"></i> Blocked';
-                    btn.replaceWith(tag);
-                }
+                if (btn) { const tag = document.createElement('span'); tag.className='already-blocked-tag'; tag.innerHTML='<i class="fas fa-ban"></i> Blocked'; btn.replaceWith(tag); }
             } else {
                 showToast(data.message || 'Failed to block IP.', true);
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-ban"></i> Block IP';
-                }
+                if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-ban"></i> Block IP'; }
             }
-        } catch (err) {
-            showToast('Network error. Please try again.', true);
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-ban"></i> Block IP';
-            }
-        }
+        } catch { showToast('Network error.', true); if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-ban"></i> Block IP'; } }
     });
 
     // ── Unblock IP ──
     async function unblockIP(ip, rowIndex, btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         try {
-            const resp = await fetch('/blocked/unblock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-                body: JSON.stringify({ ip_address: ip })
-            });
+            const resp = await fetch('/blocked/unblock', { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrfToken()}, body:JSON.stringify({ip_address:ip}) });
             const data = await resp.json();
-
             if (resp.ok && data.success) {
                 showToast('IP ' + ip + ' has been unblocked.');
                 const row = document.getElementById('blocked-row-' + rowIndex);
-                if (row) {
-                    row.style.transition = 'opacity 0.3s';
-                    row.style.opacity = '0';
-                    setTimeout(() => row.remove(), 300);
-                }
+                if (row) { row.style.transition='opacity 0.3s'; row.style.opacity='0'; setTimeout(() => row.remove(), 300); }
             } else {
                 showToast(data.message || 'Failed to unblock IP.', true);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Unblock';
+                btn.disabled=false; btn.innerHTML='<i class="fas fa-unlock-alt"></i> Unblock';
             }
-        } catch (err) {
-            showToast('Network error. Please try again.', true);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Unblock';
-        }
+        } catch { showToast('Network error.', true); btn.disabled=false; btn.innerHTML='<i class="fas fa-unlock-alt"></i> Unblock'; }
     }
 
-    // ── CSRF helper ──
+    // ── CSRF ──
     function getCsrfToken() {
         const el = document.querySelector('input[name="csrf_token"]');
         return el ? el.value : '';
     }
 
-    // ── Recording hours counter (cosmetic) ──
+    // ── Recording counter (cosmetic) ──
     function updateStatsPeriodically() {
-        const recordingSpan = document.getElementById('recordingHours');
+        const span = document.getElementById('recordingHours');
         setInterval(() => {
-            let h = parseFloat(recordingSpan.innerText) || 6.2;
-            h += 0.028;
-            if (h > 24) h = 5.8;
-            recordingSpan.innerText = h.toFixed(1);
+            let h = parseFloat(span.innerText) || 6.2;
+            h += 0.028; if (h > 24) h = 5.8;
+            span.innerText = h.toFixed(1);
         }, 9800);
     }
 
-    // ── Cloudflare stream logic ──
-    let cfMode = false; // true = CF iframe active, false = polling feed active
+    // ── Cloudflare stream ──
+    let cfMode = false;
+    let _cfUrl = '';
 
     function connectCF() {
         const url = document.getElementById('cfUrlInput').value.trim();
-        if (!url) {
-            showToast('Please paste a Cloudflare tunnel URL first.', true);
-            return;
-        }
-        if (!url.startsWith('http')) {
-            showToast('URL must start with https://', true);
-            return;
-        }
+        if (!url) { showToast('Please paste a Cloudflare tunnel URL first.', true); return; }
+        if (!url.startsWith('http')) { showToast('URL must start with https://', true); return; }
 
-        const iframe    = document.getElementById('cfIframe');
-        const img       = document.getElementById('liveFeedImg');
-        const badge     = document.getElementById('liveBadge');
+        _cfUrl = url;
+        const iframe      = document.getElementById('cfIframe');
+        const img         = document.getElementById('liveFeedImg');
+        const badge       = document.getElementById('liveBadge');
         const placeholder = document.getElementById('feedPlaceholder');
+        const errorBar    = document.getElementById('cfErrorBar');
 
-        // Stop the default polling feed
         cfMode = true;
+        errorBar.classList.remove('visible');
 
-        // Hide polling img and placeholder, show iframe
         img.style.display         = 'none';
         placeholder.style.display = 'none';
-        iframe.src                = url;
         iframe.style.display      = 'block';
 
-        // Show LIVE badge
-        badge.classList.add('visible');
+        // FIX: listen for load error so we can show fallback message
+        iframe.onload = () => {
+            // iframe loaded — check if it's actually showing content by testing contentDocument
+            // Most CF tunnel pages will load fine; X-Frame-Options denial shows a blank iframe
+            // We show the error bar after a delay if the iframe height collapses to 0
+            setTimeout(() => {
+                try {
+                    // If cross-origin, contentDocument will throw — that's fine, means page loaded cross-origin (normal)
+                    const doc = iframe.contentDocument;
+                    if (doc && doc.body && doc.body.innerHTML === '') {
+                        errorBar.classList.add('visible');
+                    }
+                } catch (e) {
+                    // Cross-origin access denied = page DID load (just from another origin) — this is normal and good
+                    errorBar.classList.remove('visible');
+                }
+            }, 2500);
+        };
+        iframe.onerror = () => {
+            errorBar.classList.add('visible');
+        };
 
-        showToast('Connected to Cloudflare stream.');
+        iframe.src = url;
+        badge.classList.add('visible');
+        showToast('Connecting to Cloudflare stream…');
     }
 
     function disconnectCF() {
         const iframe      = document.getElementById('cfIframe');
         const img         = document.getElementById('liveFeedImg');
         const badge       = document.getElementById('liveBadge');
-        const placeholder = document.getElementById('feedPlaceholder');
+        const errorBar    = document.getElementById('cfErrorBar');
 
-        cfMode = false;
-
-        // Stop iframe and hide it
+        cfMode = false; _cfUrl = '';
+        iframe.onload = null; iframe.onerror = null;
         iframe.src           = '';
         iframe.style.display = 'none';
+        errorBar.classList.remove('visible');
 
-        // Restore polling feed
-        img.style.display         = 'block';
-        placeholder.style.display = 'none';
-
-        // Hide LIVE badge (polling feed has its own indicator in the header)
+        img.style.display = 'block';
         badge.classList.remove('visible');
-
         showToast('Stream disconnected.');
     }
 
-    // ── Collapse / expand feed viewport ──
-    let feedCollapsed = false;
+    // Opens the CF URL in a new tab as fallback when iframe is blocked
+    function openCFInNewTab() {
+        if (_cfUrl) window.open(_cfUrl, '_blank');
+    }
 
+    // ── FIX: Collapse = MINIMIZE (shows a thin bar), NOT full hide ──
+    let feedCollapsed = false;
     function toggleFeedCollapse() {
-        const viewport = document.getElementById('feedViewport');
-        const urlBar   = document.getElementById('cfUrlBar');
-        const btn      = document.getElementById('collapseBtn');
+        const viewport    = document.getElementById('feedViewport');
+        const urlBar      = document.getElementById('cfUrlBar');
+        const miniBar     = document.getElementById('feedMinimizedBar');
+        const icon        = document.getElementById('collapseIcon');
+        const label       = document.getElementById('collapseBtnLabel');
 
         feedCollapsed = !feedCollapsed;
 
         if (feedCollapsed) {
-            viewport.style.maxHeight = '0';
-            viewport.style.minHeight = '0';
-            viewport.style.overflow  = 'hidden';
-            urlBar.style.display     = 'none';
-            btn.innerHTML            = '<i class="fas fa-expand-alt"></i> EXPAND';
+            // Minimize: collapse the viewport, hide the URL bar, show the mini bar
+            viewport.classList.add('collapsed');
+            urlBar.classList.add('hidden');
+            miniBar.classList.add('visible');
+            icon.className  = 'fas fa-expand-alt';
+            label.textContent = 'EXPAND';
         } else {
-            viewport.style.maxHeight = '';
-            viewport.style.minHeight = '';
-            viewport.style.overflow  = '';
-            urlBar.style.display     = '';
-            btn.innerHTML            = '<i class="fas fa-compress-alt"></i> COLLAPSE';
+            // Restore
+            viewport.classList.remove('collapsed');
+            urlBar.classList.remove('hidden');
+            miniBar.classList.remove('visible');
+            icon.className  = 'fas fa-compress-alt';
+            label.textContent = 'MINIMIZE';
         }
     }
 
-    // ── Default polling feed (only runs when CF is not active) ──
+    // ── Default polling feed ──
+    let cfMode_ref = () => cfMode;
     async function initLiveFeed() {
-        const img = document.getElementById('liveFeedImg');
+        const img         = document.getElementById('liveFeedImg');
         const placeholder = document.getElementById('feedPlaceholder');
-        let lastSeq = -1;
-        let hasFrame = false;
+        let lastSeq = -1, hasFrame = false;
 
         async function pollFrame() {
-            if (cfMode) {
-                setTimeout(pollFrame, 1000);
-                return;
-            }
+            if (cfMode) { setTimeout(pollFrame, 1000); return; }
             try {
                 const resp = await fetch('/viewer_frame', { credentials: 'include' });
                 if (resp.ok) {
@@ -1572,11 +962,9 @@
                         }
                     }
                 }
-            } catch (err) {}
+            } catch {}
             setTimeout(pollFrame, 1000);
         }
-
-        // Initially hide the img until we get a frame
         img.style.display = 'none';
         pollFrame();
     }
@@ -1590,7 +978,6 @@
             row.style.display = (matchRole && matchDate) ? '' : 'none';
         });
     }
-
     function clearLogFilter() {
         document.getElementById('filterRole').value = 'all';
         document.getElementById('filterDate').value = '';
@@ -1602,11 +989,7 @@
         setActiveTab(localStorage.getItem('activeTab') || 'live');
         updateStatsPeriodically();
         initLiveFeed();
-
-        // Allow pressing Enter in the URL input to connect
-        document.getElementById('cfUrlInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') connectCF();
-        });
+        document.getElementById('cfUrlInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') connectCF(); });
     });
 </script>
 </body>
