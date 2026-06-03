@@ -129,6 +129,7 @@ def inject_security_headers(response):
         "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob:; "
+        "connect-src 'self' https://*.trycloudflare.com; "
         "frame-ancestors 'none';"
     )
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
